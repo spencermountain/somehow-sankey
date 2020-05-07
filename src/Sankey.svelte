@@ -4,34 +4,31 @@
   import sankey from './plugin'
   d4.sankey = sankey
 
+  export let data = []
+
   // unique values of an array
   const onlyUnique = function(value, index, self) {
     return self.indexOf(value) === index
   }
 
-  var margin = { top: 10, right: 10, bottom: 10, left: 10 },
-    width = 800,
-    height = 580
-  // import buildSankey from './sankey'
-  export let data = []
-  // let node = buildSankey(data)
-  var sanKey = d4
+  let width = 800
+  let height = 580
+
+  let sanKey = d4
     .sankey()
     .nodeWidth(150)
     .nodePadding(height / 10)
     .size([width, height])
 
-  var path = sanKey.link()
+  let path = sanKey.link()
 
   // create an array to push all sources and targets, before making them unique
-  var arr = []
+  let arr = []
   data.forEach(function(d) {
     arr.push(d.source)
     arr.push(d.target)
   })
-
-  // create nodes array
-  var nodes = arr.filter(onlyUnique).map(function(d, i) {
+  let nodes = arr.filter(onlyUnique).map(function(d, i) {
     return {
       node: i,
       name: d,
@@ -39,7 +36,7 @@
   })
 
   // create links array
-  var links = data.map(function(row) {
+  let links = data.map(function(row) {
     function getNode(type) {
       return nodes.filter(function(node_object) {
         return node_object.name == row[type]
@@ -79,18 +76,8 @@
 </style>
 
 <svg viewBox="0,0,800,580" width="820" height="600">
-  <g>
-    {#each links as d}
-      <path
-        class="link"
-        d={path(d)}
-        stroke="steelblue"
-        fill="none"
-        stroke-width={Math.max(1, d.dy)}>
-        <title>{d.source.name} → {d.target.name} ${parseInt(d.value, 10)}</title>
-      </path>
-    {/each}
-  </g>
+
+  <!-- each box -->
   {#each nodes as d}
     <g class="node" transform="translate({d.x},{d.y})">
       <rect
@@ -104,4 +91,17 @@
     </g>
   {/each}
 
+  <g>
+    <!-- each link -->
+    {#each links as d}
+      <path
+        class="link"
+        d={path(d)}
+        stroke="steelblue"
+        fill="none"
+        stroke-width={Math.max(1, d.dy)}>
+        <title>{d.source.name} → {d.target.name} ${parseInt(d.value, 10)}</title>
+      </path>
+    {/each}
+  </g>
 </svg>
