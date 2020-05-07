@@ -1,0 +1,49 @@
+{
+  "name": "somehow-sankey",
+  "version": "0.0.1",
+  "description": "generate sankey diagrams in svelte",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "new": "node ./scripts/new.js",
+    "watch": "node ./scripts/watch.js",
+    "start": "budo index.js:assets/bundle.js --live",
+    "build": "browserify index.js -t [ babelify --presets [ @babel/preset-env ] ] | derequire > ./assets/bundle.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/spencermountain/frown.git"
+  },
+  "author": "Spencer Kelly (spencermountain)",
+  "license": "CC-BY-4.0",
+  "bugs": {
+    "url": "https://github.com/spencermountain/frown/issues"
+  },
+  "homepage": "https://github.com/spencermountain/frown#readme",
+  "prettier": {
+    "trailingComma": "es5",
+    "tabWidth": 2,
+    "semi": false,
+    "singleQuote": true,
+    "printWidth": 100
+  },
+  "dependencies": {
+    "d3": "^5.16.0",
+    "d3-sankey": "^0.12.3"
+  },
+  "devDependencies": {
+    "@rollup/plugin-commonjs": "11.1.0",
+    "@rollup/plugin-node-resolve": "^7.0.0",
+    "chokidar": "^3.4.0",
+    "connect": "^3.7.0",
+    "connect-livereload": "^0.6.1",
+    "livereload": "^0.9.1",
+    "rollup": "2.7.6",
+    "rollup-plugin-svelte": "^5.0.3",
+    "rollup-plugin-terser": "^5.1.2",
+    "serve-static": "^1.14.1",
+    "shelljs": "0.8.4",
+    "spencer-color": "0.1.0",
+    "svelte": "^3.0.0"
+  }
+}
