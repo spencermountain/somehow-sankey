@@ -22,14 +22,27 @@ var app = (function () {
     function safe_not_equal(a, b) {
         return a != a ? b == b : a !== b || ((a && typeof a === 'object') || typeof a === 'function');
     }
+
+    function append(target, node) {
+        target.appendChild(node);
+    }
     function insert(target, node, anchor) {
         target.insertBefore(node, anchor || null);
     }
     function detach(node) {
         node.parentNode.removeChild(node);
     }
-    function element(name) {
-        return document.createElement(name);
+    function destroy_each(iterations, detaching) {
+        for (let i = 0; i < iterations.length; i += 1) {
+            if (iterations[i])
+                iterations[i].d(detaching);
+        }
+    }
+    function svg_element(name) {
+        return document.createElementNS('http://www.w3.org/2000/svg', name);
+    }
+    function text(data) {
+        return document.createTextNode(data);
     }
     function attr(node, attribute, value) {
         if (value == null)
@@ -39,6 +52,9 @@ var app = (function () {
     }
     function children(element) {
         return Array.from(element.childNodes);
+    }
+    function set_style(node, key, value, important) {
+        node.style.setProperty(key, value, important ? 'important' : '');
     }
     function custom_event(type, detail) {
         const e = document.createEvent('CustomEvent');
@@ -137,6 +153,12 @@ var app = (function () {
             block.o(local);
         }
     }
+
+    const globals = (typeof window !== 'undefined'
+        ? window
+        : typeof globalThis !== 'undefined'
+            ? globalThis
+            : global);
     function create_component(block) {
         block && block.c();
     }
@@ -257,6 +279,10 @@ var app = (function () {
     function dispatch_dev(type, detail) {
         document.dispatchEvent(custom_event(type, Object.assign({ version: '3.22.2' }, detail)));
     }
+    function append_dev(target, node) {
+        dispatch_dev("SvelteDOMInsert", { target, node });
+        append(target, node);
+    }
     function insert_dev(target, node, anchor) {
         dispatch_dev("SvelteDOMInsert", { target, node, anchor });
         insert(target, node, anchor);
@@ -271,6 +297,15 @@ var app = (function () {
             dispatch_dev("SvelteDOMRemoveAttribute", { node, attribute });
         else
             dispatch_dev("SvelteDOMSetAttribute", { node, attribute, value });
+    }
+    function validate_each_argument(arg) {
+        if (typeof arg !== 'string' && !(arg && typeof arg === 'object' && 'length' in arg)) {
+            let msg = '{#each} only iterates over array-like objects.';
+            if (typeof Symbol === 'function' && arg && Symbol.iterator in arg) {
+                msg += ' You can use a spread to convert this iterable into an array.';
+            }
+            throw new Error(msg);
+        }
     }
     function validate_slots(name, slot, keys) {
         for (const slot_key of Object.keys(slot)) {
@@ -1793,8 +1828,8 @@ var app = (function () {
     var event = null;
 
     if (typeof document !== "undefined") {
-      var element$1 = document.documentElement;
-      if (!("onmouseenter" in element$1)) {
+      var element = document.documentElement;
+      if (!("onmouseenter" in element)) {
         filterEvents = {mouseenter: "mouseover", mouseleave: "mouseout"};
       }
     }
@@ -6409,14 +6444,14 @@ var app = (function () {
       return response.text();
     }
 
-    function text(input, init) {
+    function text$1(input, init) {
       return fetch(input, init).then(responseText);
     }
 
     function dsvParse(parse) {
       return function(input, init, row) {
         if (arguments.length === 2 && typeof init === "function") row = init, init = undefined;
-        return text(input, init).then(function(response) {
+        return text$1(input, init).then(function(response) {
           return parse(response, row);
         });
       };
@@ -6425,7 +6460,7 @@ var app = (function () {
     function dsv(delimiter, input, init, row) {
       if (arguments.length === 3 && typeof init === "function") row = init, init = undefined;
       var format = dsvFormat(delimiter);
-      return text(input, init).then(function(response) {
+      return text$1(input, init).then(function(response) {
         return format.parse(response, row);
       });
     }
@@ -6454,7 +6489,7 @@ var app = (function () {
 
     function parser(type) {
       return function(input, init)  {
-        return text(input, init).then(function(text) {
+        return text$1(input, init).then(function(text) {
           return (new DOMParser).parseFromString(text, type);
         });
       };
@@ -18490,7 +18525,7 @@ var app = (function () {
         tsv: tsv$1,
         image: image,
         json: json,
-        text: text,
+        text: text$1,
         xml: xml,
         html: html,
         svg: svg,
@@ -18874,7 +18909,7 @@ var app = (function () {
     	return n && n['default'] || n;
     }
 
-    var require$$0 = getCjsExportFromNamespace(d3);
+    var d3$1 = getCjsExportFromNamespace(d3);
 
     var plugin = function () {
       var sankey = {},
@@ -18934,7 +18969,7 @@ var app = (function () {
         function link(d) {
           var x0 = d.source.x + d.source.dx,
             x1 = d.target.x,
-            xi = require$$0.interpolateNumber(x0, x1),
+            xi = d3$1.interpolateNumber(x0, x1),
             x2 = xi(curvature),
             x3 = xi(1 - curvature),
             y0 = d.source.y + d.sy + d.dy / 2,
@@ -18971,7 +19006,7 @@ var app = (function () {
       // Compute the value (size) of each node by summing the associated links.
       function computeNodeValues() {
         nodes.forEach(function (node) {
-          node.value = Math.max(require$$0.sum(node.sourceLinks, value), require$$0.sum(node.targetLinks, value));
+          node.value = Math.max(d3$1.sum(node.sourceLinks, value), d3$1.sum(node.targetLinks, value));
         });
       }
 
@@ -19019,12 +19054,12 @@ var app = (function () {
       }
 
       function computeNodeDepths(iterations) {
-        var nodesByBreadth = require$$0
+        var nodesByBreadth = d3$1
           .nest()
           .key(function (d) {
             return d.x
           })
-          .sortKeys(require$$0.ascending)
+          .sortKeys(d3$1.ascending)
           .entries(nodes)
           .map(function (d) {
             return d.values
@@ -19041,8 +19076,8 @@ var app = (function () {
         }
 
         function initializeNodeDepth() {
-          var ky = require$$0.min(nodesByBreadth, function (nodes) {
-            return (size[1] - (nodes.length - 1) * nodePadding) / require$$0.sum(nodes, value)
+          var ky = d3$1.min(nodesByBreadth, function (nodes) {
+            return (size[1] - (nodes.length - 1) * nodePadding) / d3$1.sum(nodes, value)
           });
 
           nodesByBreadth.forEach(function (nodes) {
@@ -19061,7 +19096,7 @@ var app = (function () {
           nodesByBreadth.forEach(function (nodes, breadth) {
             nodes.forEach(function (node) {
               if (node.targetLinks.length) {
-                var y = require$$0.sum(node.targetLinks, weightedSource) / require$$0.sum(node.targetLinks, value);
+                var y = d3$1.sum(node.targetLinks, weightedSource) / d3$1.sum(node.targetLinks, value);
                 node.y += (y - center(node)) * alpha;
               }
             });
@@ -19079,7 +19114,7 @@ var app = (function () {
             .forEach(function (nodes) {
               nodes.forEach(function (node) {
                 if (node.sourceLinks.length) {
-                  var y = require$$0.sum(node.sourceLinks, weightedTarget) / require$$0.sum(node.sourceLinks, value);
+                  var y = d3$1.sum(node.sourceLinks, weightedTarget) / d3$1.sum(node.sourceLinks, value);
                   node.y += (y - center(node)) * alpha;
                 }
               });
@@ -19166,208 +19201,257 @@ var app = (function () {
       return sankey
     };
 
-    let d3$1 = require$$0;
-
-    d3$1 = Object.assign({}, d3$1);
-    d3$1.sankey = plugin;
-
-    const makeSVG = function (width, height) {
-      var svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
-      svg.setAttribute('viewBox', [0, 0, width, height]);
-      svg.setAttribute('width', width);
-      svg.setAttribute('height', height);
-      return svg
-    };
-
-    // unique values of an array
-    const onlyUnique = function (value, index, self) {
-      return self.indexOf(value) === index
-    };
-
-    const buildSankey = function (data) {
-      var margin = { top: 10, right: 10, bottom: 10, left: 10 },
-        width = 800,
-        height = 580;
-
-      // format variables
-      // var formatNumber = d3.format(',.0f') // zero decimal places
-      var format = function (d) {
-        return '$' + parseInt(d, 10)
-      };
-
-      // append the svg object to the body of the page
-      const svg = d3$1
-        .select(makeSVG(width, height))
-        .attr('width', width + margin.left + margin.right)
-        .attr('height', height + margin.top + margin.bottom);
-      svg.append('g').attr('transform', 'translate(' + margin.left + ',' + margin.top + ')');
-
-      // Set the sankey diagram properties
-      var sankey = d3$1
-        .sankey()
-        .nodeWidth(150)
-        .nodePadding(height / 10)
-        .size([width, height]);
-
-      var path = sankey.link();
-
-      function ready(csv) {
-        // create an array to push all sources and targets, before making them unique
-        var arr = [];
-        csv.forEach(function (d) {
-          arr.push(d.source);
-          arr.push(d.target);
-        });
-
-        // create nodes array
-        var nodes = arr.filter(onlyUnique).map(function (d, i) {
-          return {
-            node: i,
-            name: d,
-          }
-        });
-
-        // create links array
-        var links = csv.map(function (csv_row) {
-          function getNode(type) {
-            return nodes.filter(function (node_object) {
-              return node_object.name == csv_row[type]
-            })[0].node
-          }
-          return {
-            source: getNode('source'),
-            target: getNode('target'),
-            value: +csv_row.value,
-          }
-        });
-
-        sankey.nodes(nodes).links(links).layout(32);
-
-        // add in the links
-        var link = svg
-          .append('g')
-          .selectAll('.link')
-          .data(links)
-          .enter()
-          .append('path')
-          .attr('class', 'link')
-          .attr('d', path)
-          .style('fill', 'none')
-          .style('stroke', function (d) {
-            return 'steelblue'
-          })
-          .style('stroke-width', function (d) {
-            return Math.max(1, d.dy)
-          })
-          .sort(function (a, b) {
-            return b.dy - a.dy
-          });
-
-        // add the link titles
-        link.append('title').text(function (d) {
-          return d.source.name + ' → ' + d.target.name + '\n' + format(d.value)
-        });
-
-        // the function for moving the nodes
-        function dragmove(d) {
-          d3$1.select(this).attr(
-            'transform',
-            'translate(' + d.x + ',' + (d.y = Math.max(0, Math.min(height - d.dy, d3$1.event.y))) + ')'
-          );
-          sankey.relayout();
-          link.attr('d', path);
-        }
-
-        // add in the nodes
-        var node = svg
-          .append('g')
-          .selectAll('.node')
-          .data(nodes)
-          .enter()
-          .append('g')
-          .attr('class', 'node')
-          .attr('transform', function (d) {
-            return 'translate(' + d.x + ',' + d.y + ')'
-          })
-          .call(
-            d3$1
-              .drag()
-              .subject(function (d) {
-                return d
-              })
-              .on('start', function () {
-                this.parentNode.appendChild(this);
-              })
-              .on('drag', dragmove)
-          );
-
-        // add the rectangles for the nodes
-        node
-          .append('rect')
-          .attr('height', function (d) {
-            return d.dy < 0 ? 0.1 : d.dy
-          })
-          .attr('width', sankey.nodeWidth())
-          .style('fill', function (d) {
-            return 'steelblue'
-          })
-          .style('stroke', 'white')
-          .append('title')
-          .text(function (d) {
-            return d.name + '\n' + format(d.value)
-          });
-
-        // add in the title for the nodes
-        node
-          .append('text')
-          .attr('x', 20)
-          .attr('y', function (d) {
-            return d.dy / 2
-          })
-          .attr('dy', '.35em')
-          .attr('text-anchor', 'start')
-          .attr('style', 'font-size:14px;')
-          .attr('transform', null)
-          .text(function (d) {
-            return d.name + '- ' + Math.ceil(d.value * 100) / 100 + 'm'
-          })
-          .filter(function (d) {
-            return d.x < width / 2
-          })
-          .attr('x', 20)
-          .attr('text-anchor', 'start');
-      }
-
-      ready(data);
-      return svg.node()
-    };
-    var sankey = buildSankey;
-
     /* src/Sankey.svelte generated by Svelte v3.22.2 */
+
+    const { Object: Object_1 } = globals;
     const file = "src/Sankey.svelte";
 
-    function create_fragment(ctx) {
-    	let div;
-    	let raw_value = /*node*/ ctx[0].outerHTML + "";
+    function get_each_context(ctx, list, i) {
+    	const child_ctx = ctx.slice();
+    	child_ctx[11] = list[i];
+    	return child_ctx;
+    }
+
+    function get_each_context_1(ctx, list, i) {
+    	const child_ctx = ctx.slice();
+    	child_ctx[11] = list[i];
+    	return child_ctx;
+    }
+
+    // (83:4) {#each links as d}
+    function create_each_block_1(ctx) {
+    	let path_1;
+    	let title;
+    	let t0_value = /*d*/ ctx[11].source.name + "";
+    	let t0;
+    	let t1;
+    	let t2_value = /*d*/ ctx[11].target.name + "";
+    	let t2;
+    	let t3;
+    	let t4_value = parseInt(/*d*/ ctx[11].value, 10) + "";
+    	let t4;
+    	let path_1_d_value;
+    	let path_1_stroke_width_value;
 
     	const block = {
     		c: function create() {
-    			div = element("div");
-    			attr_dev(div, "class", "container svelte-dzchwn");
-    			add_location(div, file, 31, 0, 478);
+    			path_1 = svg_element("path");
+    			title = svg_element("title");
+    			t0 = text(t0_value);
+    			t1 = text(" → ");
+    			t2 = text(t2_value);
+    			t3 = text(" $");
+    			t4 = text(t4_value);
+    			add_location(title, file, 89, 8, 1802);
+    			attr_dev(path_1, "class", "link svelte-15iqd01");
+    			attr_dev(path_1, "d", path_1_d_value = /*path*/ ctx[1](/*d*/ ctx[11]));
+    			attr_dev(path_1, "stroke", "steelblue");
+    			attr_dev(path_1, "fill", "none");
+    			attr_dev(path_1, "stroke-width", path_1_stroke_width_value = Math.max(1, /*d*/ ctx[11].dy));
+    			add_location(path_1, file, 83, 6, 1658);
+    		},
+    		m: function mount(target, anchor) {
+    			insert_dev(target, path_1, anchor);
+    			append_dev(path_1, title);
+    			append_dev(title, t0);
+    			append_dev(title, t1);
+    			append_dev(title, t2);
+    			append_dev(title, t3);
+    			append_dev(title, t4);
+    		},
+    		p: noop,
+    		d: function destroy(detaching) {
+    			if (detaching) detach_dev(path_1);
+    		}
+    	};
+
+    	dispatch_dev("SvelteRegisterBlock", {
+    		block,
+    		id: create_each_block_1.name,
+    		type: "each",
+    		source: "(83:4) {#each links as d}",
+    		ctx
+    	});
+
+    	return block;
+    }
+
+    // (94:2) {#each nodes as d}
+    function create_each_block(ctx) {
+    	let g;
+    	let rect;
+    	let rect_height_value;
+    	let rect_width_value;
+    	let text_1;
+    	let t0_value = /*d*/ ctx[11].name + "";
+    	let t0;
+    	let t1;
+    	let t2_value = Math.ceil(/*d*/ ctx[11].value * 100) / 100 + "";
+    	let t2;
+    	let t3;
+    	let text_1_y_value;
+    	let g_transform_value;
+
+    	const block = {
+    		c: function create() {
+    			g = svg_element("g");
+    			rect = svg_element("rect");
+    			text_1 = svg_element("text");
+    			t0 = text(t0_value);
+    			t1 = text("- ");
+    			t2 = text(t2_value);
+    			t3 = text("m\n      ");
+    			attr_dev(rect, "fill", "steelblue");
+    			attr_dev(rect, "stroke", "steelblue");
+    			attr_dev(rect, "height", rect_height_value = /*d*/ ctx[11].dy < 0 ? 0.1 : /*d*/ ctx[11].dy);
+    			attr_dev(rect, "width", rect_width_value = /*sanKey*/ ctx[0].nodeWidth());
+    			attr_dev(rect, "class", "svelte-15iqd01");
+    			add_location(rect, file, 95, 6, 1992);
+    			attr_dev(text_1, "x", "20");
+    			attr_dev(text_1, "text-anchor", "start");
+    			attr_dev(text_1, "y", text_1_y_value = /*d*/ ctx[11].dy / 2);
+    			attr_dev(text_1, "dy", ".35em");
+    			set_style(text_1, "font-size", "14px");
+    			attr_dev(text_1, "class", "svelte-15iqd01");
+    			add_location(text_1, file, 100, 6, 2133);
+    			attr_dev(g, "class", "node svelte-15iqd01");
+    			attr_dev(g, "transform", g_transform_value = "translate(" + /*d*/ ctx[11].x + "," + /*d*/ ctx[11].y + ")");
+    			add_location(g, file, 94, 4, 1934);
+    		},
+    		m: function mount(target, anchor) {
+    			insert_dev(target, g, anchor);
+    			append_dev(g, rect);
+    			append_dev(g, text_1);
+    			append_dev(text_1, t0);
+    			append_dev(text_1, t1);
+    			append_dev(text_1, t2);
+    			append_dev(text_1, t3);
+    		},
+    		p: noop,
+    		d: function destroy(detaching) {
+    			if (detaching) detach_dev(g);
+    		}
+    	};
+
+    	dispatch_dev("SvelteRegisterBlock", {
+    		block,
+    		id: create_each_block.name,
+    		type: "each",
+    		source: "(94:2) {#each nodes as d}",
+    		ctx
+    	});
+
+    	return block;
+    }
+
+    function create_fragment(ctx) {
+    	let svg;
+    	let g;
+    	let each_value_1 = /*links*/ ctx[3];
+    	validate_each_argument(each_value_1);
+    	let each_blocks_1 = [];
+
+    	for (let i = 0; i < each_value_1.length; i += 1) {
+    		each_blocks_1[i] = create_each_block_1(get_each_context_1(ctx, each_value_1, i));
+    	}
+
+    	let each_value = /*nodes*/ ctx[2];
+    	validate_each_argument(each_value);
+    	let each_blocks = [];
+
+    	for (let i = 0; i < each_value.length; i += 1) {
+    		each_blocks[i] = create_each_block(get_each_context(ctx, each_value, i));
+    	}
+
+    	const block = {
+    		c: function create() {
+    			svg = svg_element("svg");
+    			g = svg_element("g");
+
+    			for (let i = 0; i < each_blocks_1.length; i += 1) {
+    				each_blocks_1[i].c();
+    			}
+
+    			for (let i = 0; i < each_blocks.length; i += 1) {
+    				each_blocks[i].c();
+    			}
+
+    			add_location(g, file, 81, 2, 1625);
+    			attr_dev(svg, "viewBox", "0,0,800,580");
+    			attr_dev(svg, "width", "820");
+    			attr_dev(svg, "height", "600");
+    			add_location(svg, file, 80, 0, 1570);
     		},
     		l: function claim(nodes) {
     			throw new Error("options.hydrate only works if the component was compiled with the `hydratable: true` option");
     		},
     		m: function mount(target, anchor) {
-    			insert_dev(target, div, anchor);
-    			div.innerHTML = raw_value;
+    			insert_dev(target, svg, anchor);
+    			append_dev(svg, g);
+
+    			for (let i = 0; i < each_blocks_1.length; i += 1) {
+    				each_blocks_1[i].m(g, null);
+    			}
+
+    			for (let i = 0; i < each_blocks.length; i += 1) {
+    				each_blocks[i].m(svg, null);
+    			}
     		},
-    		p: noop,
+    		p: function update(ctx, [dirty]) {
+    			if (dirty & /*path, links, Math, parseInt*/ 10) {
+    				each_value_1 = /*links*/ ctx[3];
+    				validate_each_argument(each_value_1);
+    				let i;
+
+    				for (i = 0; i < each_value_1.length; i += 1) {
+    					const child_ctx = get_each_context_1(ctx, each_value_1, i);
+
+    					if (each_blocks_1[i]) {
+    						each_blocks_1[i].p(child_ctx, dirty);
+    					} else {
+    						each_blocks_1[i] = create_each_block_1(child_ctx);
+    						each_blocks_1[i].c();
+    						each_blocks_1[i].m(g, null);
+    					}
+    				}
+
+    				for (; i < each_blocks_1.length; i += 1) {
+    					each_blocks_1[i].d(1);
+    				}
+
+    				each_blocks_1.length = each_value_1.length;
+    			}
+
+    			if (dirty & /*nodes, Math, sanKey*/ 5) {
+    				each_value = /*nodes*/ ctx[2];
+    				validate_each_argument(each_value);
+    				let i;
+
+    				for (i = 0; i < each_value.length; i += 1) {
+    					const child_ctx = get_each_context(ctx, each_value, i);
+
+    					if (each_blocks[i]) {
+    						each_blocks[i].p(child_ctx, dirty);
+    					} else {
+    						each_blocks[i] = create_each_block(child_ctx);
+    						each_blocks[i].c();
+    						each_blocks[i].m(svg, null);
+    					}
+    				}
+
+    				for (; i < each_blocks.length; i += 1) {
+    					each_blocks[i].d(1);
+    				}
+
+    				each_blocks.length = each_value.length;
+    			}
+    		},
     		i: noop,
     		o: noop,
     		d: function destroy(detaching) {
-    			if (detaching) detach_dev(div);
+    			if (detaching) detach_dev(svg);
+    			destroy_each(each_blocks_1, detaching);
+    			destroy_each(each_blocks, detaching);
     		}
     	};
 
@@ -19383,11 +19467,57 @@ var app = (function () {
     }
 
     function instance($$self, $$props, $$invalidate) {
+    	let d4 = Object.assign({}, d3);
+    	d4.sankey = plugin;
+
+    	// unique values of an array
+    	const onlyUnique = function (value, index, self) {
+    		return self.indexOf(value) === index;
+    	};
+
+    	var margin = { top: 10, right: 10, bottom: 10, left: 10 },
+    		width = 800,
+    		height = 580;
+
     	let { data = [] } = $$props;
-    	let node = sankey(data);
+
+    	// let node = buildSankey(data)
+    	var sanKey = d4.sankey().nodeWidth(150).nodePadding(height / 10).size([width, height]);
+
+    	var path = sanKey.link();
+
+    	// create an array to push all sources and targets, before making them unique
+    	var arr = [];
+
+    	data.forEach(function (d) {
+    		arr.push(d.source);
+    		arr.push(d.target);
+    	});
+
+    	// create nodes array
+    	var nodes = arr.filter(onlyUnique).map(function (d, i) {
+    		return { node: i, name: d };
+    	});
+
+    	// create links array
+    	var links = data.map(function (row) {
+    		function getNode(type) {
+    			return nodes.filter(function (node_object) {
+    				return node_object.name == row[type];
+    			})[0].node;
+    		}
+
+    		return {
+    			source: getNode("source"),
+    			target: getNode("target"),
+    			value: +row.value
+    		};
+    	});
+
+    	sanKey.nodes(nodes).links(links).layout(32);
     	const writable_props = ["data"];
 
-    	Object.keys($$props).forEach(key => {
+    	Object_1.keys($$props).forEach(key => {
     		if (!~writable_props.indexOf(key) && key.slice(0, 2) !== "$$") console.warn(`<Sankey> was created with unknown prop '${key}'`);
     	});
 
@@ -19395,27 +19525,49 @@ var app = (function () {
     	validate_slots("Sankey", $$slots, []);
 
     	$$self.$set = $$props => {
-    		if ("data" in $$props) $$invalidate(1, data = $$props.data);
+    		if ("data" in $$props) $$invalidate(4, data = $$props.data);
     	};
 
-    	$$self.$capture_state = () => ({ buildSankey: sankey, data, node });
+    	$$self.$capture_state = () => ({
+    		d3,
+    		d4,
+    		sankey: plugin,
+    		onlyUnique,
+    		margin,
+    		width,
+    		height,
+    		data,
+    		sanKey,
+    		path,
+    		arr,
+    		nodes,
+    		links
+    	});
 
     	$$self.$inject_state = $$props => {
-    		if ("data" in $$props) $$invalidate(1, data = $$props.data);
-    		if ("node" in $$props) $$invalidate(0, node = $$props.node);
+    		if ("d4" in $$props) d4 = $$props.d4;
+    		if ("margin" in $$props) margin = $$props.margin;
+    		if ("width" in $$props) width = $$props.width;
+    		if ("height" in $$props) height = $$props.height;
+    		if ("data" in $$props) $$invalidate(4, data = $$props.data);
+    		if ("sanKey" in $$props) $$invalidate(0, sanKey = $$props.sanKey);
+    		if ("path" in $$props) $$invalidate(1, path = $$props.path);
+    		if ("arr" in $$props) arr = $$props.arr;
+    		if ("nodes" in $$props) $$invalidate(2, nodes = $$props.nodes);
+    		if ("links" in $$props) $$invalidate(3, links = $$props.links);
     	};
 
     	if ($$props && "$$inject" in $$props) {
     		$$self.$inject_state($$props.$$inject);
     	}
 
-    	return [node, data];
+    	return [sanKey, path, nodes, links, data];
     }
 
     class Sankey extends SvelteComponentDev {
     	constructor(options) {
     		super(options);
-    		init(this, options, instance, create_fragment, safe_not_equal, { data: 1 });
+    		init(this, options, instance, create_fragment, safe_not_equal, { data: 4 });
 
     		dispatch_dev("SvelteRegisterComponent", {
     			component: this,
@@ -19550,22 +19702,9 @@ var app = (function () {
     	}
     }
 
-    let name = '';
-    // wire-in query params
-    const URLSearchParams = window.URLSearchParams;
-    if (typeof URLSearchParams !== undefined) {
-      const urlParams = new URLSearchParams(window.location.search);
-      const myParam = urlParams.get('name');
-      if (myParam) {
-        name = myParam;
-      }
-    }
-
     const app = new Demo({
       target: document.body,
-      props: {
-        name: name,
-      },
+      props: {},
     });
 
     return app;
