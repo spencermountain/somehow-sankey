@@ -2,7 +2,7 @@
   "name": "somehow-sankey",
   "version": "0.0.1",
   "description": "generate sankey diagrams in svelte",
-  "main": "src/Sankey.svelte",
+  "main": "src/index.mjs",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
     "new": "node ./scripts/new.js",

@@ -25,7 +25,7 @@ const buildPost = function (abs) {
         if (message.code === 'CIRCULAR_DEPENDENCY') {
           return
         }
-        console.error(message)
+        console.error(message.message)
       },
     })
     .then((bundle) => {

@@ -1,13 +1,12 @@
 <script>
-  import Sankey from './src/Sankey.svelte'
-  let data = [
-    { source: 'NHL', target: 'Leafs', value: '8' },
-    { source: 'Tickets', target: 'Leafs', value: '50' },
-    { source: 'In-Arena', target: 'Leafs', value: '20' },
-    { source: 'LocalTV', target: 'Leafs', value: '5' },
-    { source: 'Leafs', target: 'Player Salary', value: '75' },
-    { source: 'Leafs', target: 'Coach', value: '6' },
-  ]
+  import { Sankey, Path } from './src'
 </script>
 
-<Sankey {data} />
+<Sankey>
+  <Path source="NHL" target="Leafs" value="8" />
+  <Path source="Tickets" target="Leafs" value="50" />
+  <Path source="In-Arena" target="Leafs" value="20" />
+  <Path source="LocalTV" target="Leafs" value="5" />
+  <Path source="Leafs" target="Player Salary" value="75" />
+  <Path source="Leafs" target="Coach" value="6" />
+</Sankey>
