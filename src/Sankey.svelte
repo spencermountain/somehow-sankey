@@ -19,18 +19,29 @@
     color: #dedede;
     text-align: center;
     display: flex;
+    flex-direction: column;
     align-items: center;
     justify-content: center;
-    border-bottom: 4px solid #cc6966;
-    font-size: 13px;
+    border-bottom: 4px solid #d98b89;
+    font-size: 15px;
+    font-family: 'Catamaran', sans-serif;
   }
 
   .link {
     fill: none;
-    stroke-opacity: 0.3;
+    stroke-opacity: 0.2;
   }
   .link:hover {
     stroke-opacity: 1;
+  }
+  .value {
+    color: #d98b89;
+    font-size: 25px;
+  }
+  .tiny {
+    flex-direction: row;
+    font-size: 12px;
+    justify-content: space-evenly;
   }
 </style>
 
@@ -40,9 +51,13 @@
     {#each nodes as d}
       <div
         class="node"
+        class:tiny={d.y > 300}
         style="left:{d.x}px; top:{d.y}px; width:{nodeWidth}px; background-color:{color};
         height:{d.dy < 0 ? 0.1 : d.dy}px;">
-        {d.name}- {Math.ceil(d.value * 100) / 100}m
+        <div class="label">{d.name}</div>
+        <div class="value" class:tiny={d.y > 300}>
+          {Math.ceil(d.value * 100) / 100}m
+        </div>
       </div>
     {/each}
 
@@ -56,6 +71,7 @@
           d={path(d)}
           stroke="steelblue"
           fill="none"
+          style=""
           stroke-width={Math.max(1, d.dy)}>
           <title>
             {d.source.name} → {d.target.name} ${parseInt(d.value, 10)}

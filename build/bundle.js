@@ -97,6 +97,9 @@ var app = (function () {
     function set_style(node, key, value, important) {
         node.style.setProperty(key, value, important ? 'important' : '');
     }
+    function toggle_class(element, name, toggle) {
+        element.classList[toggle ? 'add' : 'remove'](name);
+    }
     function custom_event(type, detail) {
         const e = document.createEvent('CustomEvent');
         e.initCustomEvent(type, false, false, detail);
@@ -19360,60 +19363,83 @@ var app = (function () {
     	return child_ctx;
     }
 
-    // (40:4) {#each nodes as d}
+    // (51:4) {#each nodes as d}
     function create_each_block_1(ctx) {
-    	let div;
+    	let div2;
+    	let div0;
     	let t0_value = /*d*/ ctx[10].name + "";
     	let t0;
     	let t1;
+    	let div1;
     	let t2_value = Math.ceil(/*d*/ ctx[10].value * 100) / 100 + "";
     	let t2;
     	let t3;
+    	let t4;
 
     	const block = {
     		c: function create() {
-    			div = element("div");
+    			div2 = element("div");
+    			div0 = element("div");
     			t0 = text(t0_value);
-    			t1 = text("- ");
+    			t1 = space();
+    			div1 = element("div");
     			t2 = text(t2_value);
-    			t3 = text("m\n      ");
-    			attr_dev(div, "class", "node svelte-1vzjfe");
-    			set_style(div, "left", /*d*/ ctx[10].x + "px");
-    			set_style(div, "top", /*d*/ ctx[10].y + "px");
-    			set_style(div, "width", /*nodeWidth*/ ctx[5] + "px");
-    			set_style(div, "background-color", /*color*/ ctx[6]);
-    			set_style(div, "height", (/*d*/ ctx[10].dy < 0 ? 0.1 : /*d*/ ctx[10].dy) + "px");
-    			add_location(div, file, 40, 6, 924);
+    			t3 = text("m");
+    			t4 = space();
+    			attr_dev(div0, "class", "label");
+    			add_location(div0, file, 56, 8, 1343);
+    			attr_dev(div1, "class", "value svelte-sj91yl");
+    			toggle_class(div1, "tiny", /*d*/ ctx[10].y > 300);
+    			add_location(div1, file, 57, 8, 1385);
+    			attr_dev(div2, "class", "node svelte-sj91yl");
+    			set_style(div2, "left", /*d*/ ctx[10].x + "px");
+    			set_style(div2, "top", /*d*/ ctx[10].y + "px");
+    			set_style(div2, "width", /*nodeWidth*/ ctx[5] + "px");
+    			set_style(div2, "background-color", /*color*/ ctx[6]);
+    			set_style(div2, "height", (/*d*/ ctx[10].dy < 0 ? 0.1 : /*d*/ ctx[10].dy) + "px");
+    			toggle_class(div2, "tiny", /*d*/ ctx[10].y > 300);
+    			add_location(div2, file, 51, 6, 1145);
     		},
     		m: function mount(target, anchor) {
-    			insert_dev(target, div, anchor);
-    			append_dev(div, t0);
-    			append_dev(div, t1);
-    			append_dev(div, t2);
-    			append_dev(div, t3);
+    			insert_dev(target, div2, anchor);
+    			append_dev(div2, div0);
+    			append_dev(div0, t0);
+    			append_dev(div2, t1);
+    			append_dev(div2, div1);
+    			append_dev(div1, t2);
+    			append_dev(div1, t3);
+    			append_dev(div2, t4);
     		},
     		p: function update(ctx, dirty) {
     			if (dirty & /*nodes*/ 4 && t0_value !== (t0_value = /*d*/ ctx[10].name + "")) set_data_dev(t0, t0_value);
     			if (dirty & /*nodes*/ 4 && t2_value !== (t2_value = Math.ceil(/*d*/ ctx[10].value * 100) / 100 + "")) set_data_dev(t2, t2_value);
 
     			if (dirty & /*nodes*/ 4) {
-    				set_style(div, "left", /*d*/ ctx[10].x + "px");
+    				toggle_class(div1, "tiny", /*d*/ ctx[10].y > 300);
     			}
 
     			if (dirty & /*nodes*/ 4) {
-    				set_style(div, "top", /*d*/ ctx[10].y + "px");
+    				set_style(div2, "left", /*d*/ ctx[10].x + "px");
+    			}
+
+    			if (dirty & /*nodes*/ 4) {
+    				set_style(div2, "top", /*d*/ ctx[10].y + "px");
     			}
 
     			if (dirty & /*nodeWidth*/ 32) {
-    				set_style(div, "width", /*nodeWidth*/ ctx[5] + "px");
+    				set_style(div2, "width", /*nodeWidth*/ ctx[5] + "px");
     			}
 
     			if (dirty & /*nodes*/ 4) {
-    				set_style(div, "height", (/*d*/ ctx[10].dy < 0 ? 0.1 : /*d*/ ctx[10].dy) + "px");
+    				set_style(div2, "height", (/*d*/ ctx[10].dy < 0 ? 0.1 : /*d*/ ctx[10].dy) + "px");
+    			}
+
+    			if (dirty & /*nodes*/ 4) {
+    				toggle_class(div2, "tiny", /*d*/ ctx[10].y > 300);
     			}
     		},
     		d: function destroy(detaching) {
-    			if (detaching) detach_dev(div);
+    			if (detaching) detach_dev(div2);
     		}
     	};
 
@@ -19421,14 +19447,14 @@ var app = (function () {
     		block,
     		id: create_each_block_1.name,
     		type: "each",
-    		source: "(40:4) {#each nodes as d}",
+    		source: "(51:4) {#each nodes as d}",
     		ctx
     	});
 
     	return block;
     }
 
-    // (53:6) {#each links as d}
+    // (68:6) {#each links as d}
     function create_each_block(ctx) {
     	let path_1;
     	let title;
@@ -19452,13 +19478,13 @@ var app = (function () {
     			t2 = text(t2_value);
     			t3 = text(" $");
     			t4 = text(t4_value);
-    			add_location(title, file, 59, 10, 1424);
-    			attr_dev(path_1, "class", "link svelte-1vzjfe");
+    			add_location(title, file, 75, 10, 1795);
+    			attr_dev(path_1, "class", "link svelte-sj91yl");
     			attr_dev(path_1, "d", path_1_d_value = /*path*/ ctx[4](/*d*/ ctx[10]));
     			attr_dev(path_1, "stroke", "steelblue");
     			attr_dev(path_1, "fill", "none");
     			attr_dev(path_1, "stroke-width", path_1_stroke_width_value = Math.max(1, /*d*/ ctx[10].dy));
-    			add_location(path_1, file, 53, 8, 1268);
+    			add_location(path_1, file, 68, 8, 1620);
     		},
     		m: function mount(target, anchor) {
     			insert_dev(target, path_1, anchor);
@@ -19491,7 +19517,7 @@ var app = (function () {
     		block,
     		id: create_each_block.name,
     		type: "each",
-    		source: "(53:6) {#each links as d}",
+    		source: "(68:6) {#each links as d}",
     		ctx
     	});
 
@@ -19548,14 +19574,14 @@ var app = (function () {
     			set_style(div0, "position", "absolute");
     			set_style(div0, "width", /*width*/ ctx[0] + "px");
     			set_style(div0, "height", /*height*/ ctx[1] + "px");
-    			add_location(div0, file, 37, 2, 804);
-    			add_location(g, file, 51, 4, 1231);
+    			add_location(div0, file, 48, 2, 1025);
+    			add_location(g, file, 66, 4, 1583);
     			attr_dev(svg, "viewBox", svg_viewBox_value = "0,0," + /*width*/ ctx[0] + "," + /*height*/ ctx[1]);
     			attr_dev(svg, "width", /*width*/ ctx[0]);
     			attr_dev(svg, "height", /*height*/ ctx[1]);
-    			add_location(svg, file, 50, 2, 1173);
+    			add_location(svg, file, 65, 2, 1525);
     			set_style(div1, "position", "relative");
-    			add_location(div1, file, 36, 0, 769);
+    			add_location(div1, file, 47, 0, 990);
     		},
     		l: function claim(nodes) {
     			throw new Error("options.hydrate only works if the component was compiled with the `hydratable: true` option");
