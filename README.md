@@ -4,16 +4,16 @@ WIP svelte sankey diagram component
 
 ```html
 <script>
-  import { Sankey, Path } from 'somehow-sankey'
+  import { Sankey, Node } from 'somehow-sankey'
 </script>
 
 <Sankey>
-  <Path source="NHL" target="Leafs" value="8" />
-  <Path source="Tickets" target="Leafs" value="50" />
-  <Path source="In-Arena" target="Leafs" value="20" />
-  <Path source="LocalTV" target="Leafs" value="5" />
-  <Path source="Leafs" target="Player Salary" value="75" />
-  <Path source="Leafs" target="Coach" value="6" />
+  <Node name="NHL" to="Leafs" value="8" />
+  <Node name="Tickets" to="Leafs" value="50" color="pink" />
+  <Node name="In-Arena" to="Leafs" value="20" />
+  <Node name="LocalTV" to="Leafs" value="5" />
+  <Node name="Leafs" to="Player Salary" value="75" />
+  <Node name="Leafs" to="Coach" value="6" />
 </Sankey>
 ```
 

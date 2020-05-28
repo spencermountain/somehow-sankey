@@ -1,12 +1,12 @@
 <script>
-  import { Sankey, Path } from './src'
+  import { Sankey, Node } from './src'
 </script>
 
 <Sankey>
-  <Path source="NHL" target="Leafs" value="8" order={1} />
-  <Path source="Tickets" target="Leafs" value="50" />
-  <Path source="In-Arena" target="Leafs" value="20" />
-  <Path source="LocalTV" target="Leafs" value="5" />
-  <Path source="Leafs" target="Player Salary" value="75" />
-  <Path source="Leafs" target="Coach" value="6" />
+  <Node name="NHL" to="Leafs" value="8" />
+  <Node name="Tickets" to="Leafs" value="50" />
+  <Node name="In-Arena" to="Leafs" value="20" />
+  <Node name="LocalTV" to="Leafs" value="5" />
+  <Node name="Leafs" to="Player Salary" value="75" />
+  <Node name="Leafs" to="Coach" value="6" />
 </Sankey>

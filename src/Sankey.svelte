@@ -1,6 +1,8 @@
 <script>
   import build from './math/build'
   import { items } from './store.js'
+  import c from 'spencer-color'
+  let colors = c.colors
   export let data = []
   export let width = 800
   export let height = 500
@@ -9,6 +11,7 @@
     ;({ nodes, links, path, nodeWidth } = build(all, width, height))
   })
   let color = 'steelblue'
+  let accent = '#d98b89'
 </script>
 
 <style>
@@ -47,15 +50,18 @@
 
 <div style="position:relative;">
   <div style="position:absolute; width:{width}px; height:{height}px;">
-    <!-- each box -->
     {#each nodes as d}
       <div
         class="node"
         class:tiny={d.y > 300}
-        style="left:{d.x}px; top:{d.y}px; width:{nodeWidth}px; background-color:{color};
-        height:{d.dy < 0 ? 0.1 : d.dy}px;">
+        style="left:{d.x}px; top:{d.y}px; width:{nodeWidth}px; background-color:{colors[d.color] || color};
+        height:{d.dy < 0 ? 0.1 : d.dy}px; border-bottom: 4px solid {colors[d.accent] || accent};
+        opacity:{d.opacity || 1};">
         <div class="label">{d.name}</div>
-        <div class="value" class:tiny={d.y > 300}>
+        <div
+          class="value"
+          class:tiny={d.y > 300}
+          style="color:{colors[d.accent] || accent};">
           {Math.ceil(d.value * 100) / 100}m
         </div>
       </div>

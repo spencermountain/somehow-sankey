@@ -2,13 +2,12 @@ import * as d3 from 'd3'
 let d4 = Object.assign({}, d3)
 import sankey from './plugin'
 d4.sankey = sankey
+// unique values of an array
+const onlyUnique = function (value, index, self) {
+  return self.indexOf(value) === index
+}
 
 const build = function (data, width, height) {
-  // unique values of an array
-  const onlyUnique = function (value, index, self) {
-    return self.indexOf(value) === index
-  }
-
   let sanKey = d4
     .sankey()
     .nodeWidth(150)
@@ -45,7 +44,13 @@ const build = function (data, width, height) {
   })
 
   sanKey.nodes(nodes).links(links).layout(32)
-
+  nodes.forEach((n, i) => {
+    if (data[i]) {
+      n.color = data[i].color
+      n.accent = data[i].accent
+      n.opacity = data[i].opacity
+    }
+  })
   return {
     nodes: nodes,
     links,
