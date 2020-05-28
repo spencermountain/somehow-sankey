@@ -73,6 +73,9 @@ var app = (function () {
                 iterations[i].d(detaching);
         }
     }
+    function element(name) {
+        return document.createElement(name);
+    }
     function svg_element(name) {
         return document.createElementNS('http://www.w3.org/2000/svg', name);
     }
@@ -1867,8 +1870,8 @@ var app = (function () {
     var event = null;
 
     if (typeof document !== "undefined") {
-      var element = document.documentElement;
-      if (!("onmouseenter" in element)) {
+      var element$1 = document.documentElement;
+      if (!("onmouseenter" in element$1)) {
         filterEvents = {mouseenter: "mouseover", mouseleave: "mouseout"};
       }
     }
@@ -18944,12 +18947,6 @@ var app = (function () {
         zoomIdentity: identity$9
     });
 
-    function getCjsExportFromNamespace (n) {
-    	return n && n['default'] || n;
-    }
-
-    var d3$1 = getCjsExportFromNamespace(d3);
-
     var plugin = function () {
       var sankey = {},
         nodeWidth = 24,
@@ -19008,7 +19005,7 @@ var app = (function () {
         function link(d) {
           var x0 = d.source.x + d.source.dx,
             x1 = d.target.x,
-            xi = d3$1.interpolateNumber(x0, x1),
+            xi = d3.interpolateNumber(x0, x1),
             x2 = xi(curvature),
             x3 = xi(1 - curvature),
             y0 = d.source.y + d.sy + d.dy / 2,
@@ -19045,7 +19042,7 @@ var app = (function () {
       // Compute the value (size) of each node by summing the associated links.
       function computeNodeValues() {
         nodes.forEach(function (node) {
-          node.value = Math.max(d3$1.sum(node.sourceLinks, value), d3$1.sum(node.targetLinks, value));
+          node.value = Math.max(d3.sum(node.sourceLinks, value), d3.sum(node.targetLinks, value));
         });
       }
 
@@ -19093,12 +19090,12 @@ var app = (function () {
       }
 
       function computeNodeDepths(iterations) {
-        var nodesByBreadth = d3$1
+        var nodesByBreadth = d3
           .nest()
           .key(function (d) {
             return d.x
           })
-          .sortKeys(d3$1.ascending)
+          .sortKeys(d3.ascending)
           .entries(nodes)
           .map(function (d) {
             return d.values
@@ -19115,8 +19112,8 @@ var app = (function () {
         }
 
         function initializeNodeDepth() {
-          var ky = d3$1.min(nodesByBreadth, function (nodes) {
-            return (size[1] - (nodes.length - 1) * nodePadding) / d3$1.sum(nodes, value)
+          var ky = d3.min(nodesByBreadth, function (nodes) {
+            return (size[1] - (nodes.length - 1) * nodePadding) / d3.sum(nodes, value)
           });
 
           nodesByBreadth.forEach(function (nodes) {
@@ -19135,7 +19132,7 @@ var app = (function () {
           nodesByBreadth.forEach(function (nodes, breadth) {
             nodes.forEach(function (node) {
               if (node.targetLinks.length) {
-                var y = d3$1.sum(node.targetLinks, weightedSource) / d3$1.sum(node.targetLinks, value);
+                var y = d3.sum(node.targetLinks, weightedSource) / d3.sum(node.targetLinks, value);
                 node.y += (y - center(node)) * alpha;
               }
             });
@@ -19153,7 +19150,7 @@ var app = (function () {
             .forEach(function (nodes) {
               nodes.forEach(function (node) {
                 if (node.sourceLinks.length) {
-                  var y = d3$1.sum(node.sourceLinks, weightedTarget) / d3$1.sum(node.sourceLinks, value);
+                  var y = d3.sum(node.sourceLinks, weightedTarget) / d3.sum(node.sourceLinks, value);
                   node.y += (y - center(node)) * alpha;
                 }
               });
@@ -19243,14 +19240,11 @@ var app = (function () {
     let d4 = Object.assign({}, d3);
     d4.sankey = plugin;
 
-    const build = function (data) {
+    const build = function (data, width, height) {
       // unique values of an array
       const onlyUnique = function (value, index, self) {
         return self.indexOf(value) === index
       };
-
-      let width = 800;
-      let height = 580;
 
       let sanKey = d4
         .sankey()
@@ -19356,88 +19350,70 @@ var app = (function () {
 
     function get_each_context(ctx, list, i) {
     	const child_ctx = ctx.slice();
-    	child_ctx[7] = list[i];
+    	child_ctx[10] = list[i];
     	return child_ctx;
     }
 
     function get_each_context_1(ctx, list, i) {
     	const child_ctx = ctx.slice();
-    	child_ctx[7] = list[i];
+    	child_ctx[10] = list[i];
     	return child_ctx;
     }
 
-    // (34:2) {#each nodes as d}
+    // (40:4) {#each nodes as d}
     function create_each_block_1(ctx) {
-    	let g;
-    	let rect;
-    	let rect_height_value;
-    	let text_1;
-    	let t0_value = /*d*/ ctx[7].name + "";
+    	let div;
+    	let t0_value = /*d*/ ctx[10].name + "";
     	let t0;
     	let t1;
-    	let t2_value = Math.ceil(/*d*/ ctx[7].value * 100) / 100 + "";
+    	let t2_value = Math.ceil(/*d*/ ctx[10].value * 100) / 100 + "";
     	let t2;
     	let t3;
-    	let text_1_y_value;
-    	let g_transform_value;
 
     	const block = {
     		c: function create() {
-    			g = svg_element("g");
-    			rect = svg_element("rect");
-    			text_1 = svg_element("text");
+    			div = element("div");
     			t0 = text(t0_value);
     			t1 = text("- ");
     			t2 = text(t2_value);
     			t3 = text("m\n      ");
-    			attr_dev(rect, "fill", "steelblue");
-    			attr_dev(rect, "stroke", "steelblue");
-    			attr_dev(rect, "height", rect_height_value = /*d*/ ctx[7].dy < 0 ? 0.1 : /*d*/ ctx[7].dy);
-    			attr_dev(rect, "width", /*nodeWidth*/ ctx[3]);
-    			attr_dev(rect, "class", "svelte-15iqd01");
-    			add_location(rect, file, 35, 6, 689);
-    			attr_dev(text_1, "x", "20");
-    			attr_dev(text_1, "text-anchor", "start");
-    			attr_dev(text_1, "y", text_1_y_value = /*d*/ ctx[7].dy / 2);
-    			attr_dev(text_1, "dy", ".35em");
-    			set_style(text_1, "font-size", "14px");
-    			attr_dev(text_1, "class", "svelte-15iqd01");
-    			add_location(text_1, file, 40, 6, 821);
-    			attr_dev(g, "class", "node svelte-15iqd01");
-    			attr_dev(g, "transform", g_transform_value = "translate(" + /*d*/ ctx[7].x + "," + /*d*/ ctx[7].y + ")");
-    			add_location(g, file, 34, 4, 631);
+    			attr_dev(div, "class", "node svelte-1vzjfe");
+    			set_style(div, "left", /*d*/ ctx[10].x + "px");
+    			set_style(div, "top", /*d*/ ctx[10].y + "px");
+    			set_style(div, "width", /*nodeWidth*/ ctx[5] + "px");
+    			set_style(div, "background-color", /*color*/ ctx[6]);
+    			set_style(div, "height", (/*d*/ ctx[10].dy < 0 ? 0.1 : /*d*/ ctx[10].dy) + "px");
+    			add_location(div, file, 40, 6, 924);
     		},
     		m: function mount(target, anchor) {
-    			insert_dev(target, g, anchor);
-    			append_dev(g, rect);
-    			append_dev(g, text_1);
-    			append_dev(text_1, t0);
-    			append_dev(text_1, t1);
-    			append_dev(text_1, t2);
-    			append_dev(text_1, t3);
+    			insert_dev(target, div, anchor);
+    			append_dev(div, t0);
+    			append_dev(div, t1);
+    			append_dev(div, t2);
+    			append_dev(div, t3);
     		},
     		p: function update(ctx, dirty) {
-    			if (dirty & /*nodes*/ 1 && rect_height_value !== (rect_height_value = /*d*/ ctx[7].dy < 0 ? 0.1 : /*d*/ ctx[7].dy)) {
-    				attr_dev(rect, "height", rect_height_value);
+    			if (dirty & /*nodes*/ 4 && t0_value !== (t0_value = /*d*/ ctx[10].name + "")) set_data_dev(t0, t0_value);
+    			if (dirty & /*nodes*/ 4 && t2_value !== (t2_value = Math.ceil(/*d*/ ctx[10].value * 100) / 100 + "")) set_data_dev(t2, t2_value);
+
+    			if (dirty & /*nodes*/ 4) {
+    				set_style(div, "left", /*d*/ ctx[10].x + "px");
     			}
 
-    			if (dirty & /*nodeWidth*/ 8) {
-    				attr_dev(rect, "width", /*nodeWidth*/ ctx[3]);
+    			if (dirty & /*nodes*/ 4) {
+    				set_style(div, "top", /*d*/ ctx[10].y + "px");
     			}
 
-    			if (dirty & /*nodes*/ 1 && t0_value !== (t0_value = /*d*/ ctx[7].name + "")) set_data_dev(t0, t0_value);
-    			if (dirty & /*nodes*/ 1 && t2_value !== (t2_value = Math.ceil(/*d*/ ctx[7].value * 100) / 100 + "")) set_data_dev(t2, t2_value);
-
-    			if (dirty & /*nodes*/ 1 && text_1_y_value !== (text_1_y_value = /*d*/ ctx[7].dy / 2)) {
-    				attr_dev(text_1, "y", text_1_y_value);
+    			if (dirty & /*nodeWidth*/ 32) {
+    				set_style(div, "width", /*nodeWidth*/ ctx[5] + "px");
     			}
 
-    			if (dirty & /*nodes*/ 1 && g_transform_value !== (g_transform_value = "translate(" + /*d*/ ctx[7].x + "," + /*d*/ ctx[7].y + ")")) {
-    				attr_dev(g, "transform", g_transform_value);
+    			if (dirty & /*nodes*/ 4) {
+    				set_style(div, "height", (/*d*/ ctx[10].dy < 0 ? 0.1 : /*d*/ ctx[10].dy) + "px");
     			}
     		},
     		d: function destroy(detaching) {
-    			if (detaching) detach_dev(g);
+    			if (detaching) detach_dev(div);
     		}
     	};
 
@@ -19445,24 +19421,24 @@ var app = (function () {
     		block,
     		id: create_each_block_1.name,
     		type: "each",
-    		source: "(34:2) {#each nodes as d}",
+    		source: "(40:4) {#each nodes as d}",
     		ctx
     	});
 
     	return block;
     }
 
-    // (54:4) {#each links as d}
+    // (53:6) {#each links as d}
     function create_each_block(ctx) {
     	let path_1;
     	let title;
-    	let t0_value = /*d*/ ctx[7].source.name + "";
+    	let t0_value = /*d*/ ctx[10].source.name + "";
     	let t0;
     	let t1;
-    	let t2_value = /*d*/ ctx[7].target.name + "";
+    	let t2_value = /*d*/ ctx[10].target.name + "";
     	let t2;
     	let t3;
-    	let t4_value = parseInt(/*d*/ ctx[7].value, 10) + "";
+    	let t4_value = parseInt(/*d*/ ctx[10].value, 10) + "";
     	let t4;
     	let path_1_d_value;
     	let path_1_stroke_width_value;
@@ -19476,13 +19452,13 @@ var app = (function () {
     			t2 = text(t2_value);
     			t3 = text(" $");
     			t4 = text(t4_value);
-    			add_location(title, file, 60, 8, 1231);
-    			attr_dev(path_1, "class", "link svelte-15iqd01");
-    			attr_dev(path_1, "d", path_1_d_value = /*path*/ ctx[2](/*d*/ ctx[7]));
+    			add_location(title, file, 59, 10, 1424);
+    			attr_dev(path_1, "class", "link svelte-1vzjfe");
+    			attr_dev(path_1, "d", path_1_d_value = /*path*/ ctx[4](/*d*/ ctx[10]));
     			attr_dev(path_1, "stroke", "steelblue");
     			attr_dev(path_1, "fill", "none");
-    			attr_dev(path_1, "stroke-width", path_1_stroke_width_value = Math.max(1, /*d*/ ctx[7].dy));
-    			add_location(path_1, file, 54, 6, 1087);
+    			attr_dev(path_1, "stroke-width", path_1_stroke_width_value = Math.max(1, /*d*/ ctx[10].dy));
+    			add_location(path_1, file, 53, 8, 1268);
     		},
     		m: function mount(target, anchor) {
     			insert_dev(target, path_1, anchor);
@@ -19494,15 +19470,15 @@ var app = (function () {
     			append_dev(title, t4);
     		},
     		p: function update(ctx, dirty) {
-    			if (dirty & /*links*/ 2 && t0_value !== (t0_value = /*d*/ ctx[7].source.name + "")) set_data_dev(t0, t0_value);
-    			if (dirty & /*links*/ 2 && t2_value !== (t2_value = /*d*/ ctx[7].target.name + "")) set_data_dev(t2, t2_value);
-    			if (dirty & /*links*/ 2 && t4_value !== (t4_value = parseInt(/*d*/ ctx[7].value, 10) + "")) set_data_dev(t4, t4_value);
+    			if (dirty & /*links*/ 8 && t0_value !== (t0_value = /*d*/ ctx[10].source.name + "")) set_data_dev(t0, t0_value);
+    			if (dirty & /*links*/ 8 && t2_value !== (t2_value = /*d*/ ctx[10].target.name + "")) set_data_dev(t2, t2_value);
+    			if (dirty & /*links*/ 8 && t4_value !== (t4_value = parseInt(/*d*/ ctx[10].value, 10) + "")) set_data_dev(t4, t4_value);
 
-    			if (dirty & /*path, links*/ 6 && path_1_d_value !== (path_1_d_value = /*path*/ ctx[2](/*d*/ ctx[7]))) {
+    			if (dirty & /*path, links*/ 24 && path_1_d_value !== (path_1_d_value = /*path*/ ctx[4](/*d*/ ctx[10]))) {
     				attr_dev(path_1, "d", path_1_d_value);
     			}
 
-    			if (dirty & /*links*/ 2 && path_1_stroke_width_value !== (path_1_stroke_width_value = Math.max(1, /*d*/ ctx[7].dy))) {
+    			if (dirty & /*links*/ 8 && path_1_stroke_width_value !== (path_1_stroke_width_value = Math.max(1, /*d*/ ctx[10].dy))) {
     				attr_dev(path_1, "stroke-width", path_1_stroke_width_value);
     			}
     		},
@@ -19515,7 +19491,7 @@ var app = (function () {
     		block,
     		id: create_each_block.name,
     		type: "each",
-    		source: "(54:4) {#each links as d}",
+    		source: "(53:6) {#each links as d}",
     		ctx
     	});
 
@@ -19523,11 +19499,15 @@ var app = (function () {
     }
 
     function create_fragment(ctx) {
+    	let div1;
+    	let div0;
+    	let t0;
     	let svg;
     	let g;
-    	let t;
+    	let svg_viewBox_value;
+    	let t1;
     	let current;
-    	let each_value_1 = /*nodes*/ ctx[0];
+    	let each_value_1 = /*nodes*/ ctx[2];
     	validate_each_argument(each_value_1);
     	let each_blocks_1 = [];
 
@@ -19535,7 +19515,7 @@ var app = (function () {
     		each_blocks_1[i] = create_each_block_1(get_each_context_1(ctx, each_value_1, i));
     	}
 
-    	let each_value = /*links*/ ctx[1];
+    	let each_value = /*links*/ ctx[3];
     	validate_each_argument(each_value);
     	let each_blocks = [];
 
@@ -19543,48 +19523,60 @@ var app = (function () {
     		each_blocks[i] = create_each_block(get_each_context(ctx, each_value, i));
     	}
 
-    	const default_slot_template = /*$$slots*/ ctx[6].default;
-    	const default_slot = create_slot(default_slot_template, ctx, /*$$scope*/ ctx[5], null);
+    	const default_slot_template = /*$$slots*/ ctx[9].default;
+    	const default_slot = create_slot(default_slot_template, ctx, /*$$scope*/ ctx[8], null);
 
     	const block = {
     		c: function create() {
-    			svg = svg_element("svg");
+    			div1 = element("div");
+    			div0 = element("div");
 
     			for (let i = 0; i < each_blocks_1.length; i += 1) {
     				each_blocks_1[i].c();
     			}
 
+    			t0 = space();
+    			svg = svg_element("svg");
     			g = svg_element("g");
 
     			for (let i = 0; i < each_blocks.length; i += 1) {
     				each_blocks[i].c();
     			}
 
-    			t = space();
+    			t1 = space();
     			if (default_slot) default_slot.c();
-    			add_location(g, file, 51, 2, 1031);
-    			attr_dev(svg, "viewBox", "0,0,800,580");
-    			attr_dev(svg, "width", "820");
-    			attr_dev(svg, "height", "600");
-    			add_location(svg, file, 30, 0, 532);
+    			set_style(div0, "position", "absolute");
+    			set_style(div0, "width", /*width*/ ctx[0] + "px");
+    			set_style(div0, "height", /*height*/ ctx[1] + "px");
+    			add_location(div0, file, 37, 2, 804);
+    			add_location(g, file, 51, 4, 1231);
+    			attr_dev(svg, "viewBox", svg_viewBox_value = "0,0," + /*width*/ ctx[0] + "," + /*height*/ ctx[1]);
+    			attr_dev(svg, "width", /*width*/ ctx[0]);
+    			attr_dev(svg, "height", /*height*/ ctx[1]);
+    			add_location(svg, file, 50, 2, 1173);
+    			set_style(div1, "position", "relative");
+    			add_location(div1, file, 36, 0, 769);
     		},
     		l: function claim(nodes) {
     			throw new Error("options.hydrate only works if the component was compiled with the `hydratable: true` option");
     		},
     		m: function mount(target, anchor) {
-    			insert_dev(target, svg, anchor);
+    			insert_dev(target, div1, anchor);
+    			append_dev(div1, div0);
 
     			for (let i = 0; i < each_blocks_1.length; i += 1) {
-    				each_blocks_1[i].m(svg, null);
+    				each_blocks_1[i].m(div0, null);
     			}
 
+    			append_dev(div1, t0);
+    			append_dev(div1, svg);
     			append_dev(svg, g);
 
     			for (let i = 0; i < each_blocks.length; i += 1) {
     				each_blocks[i].m(g, null);
     			}
 
-    			insert_dev(target, t, anchor);
+    			insert_dev(target, t1, anchor);
 
     			if (default_slot) {
     				default_slot.m(target, anchor);
@@ -19593,8 +19585,8 @@ var app = (function () {
     			current = true;
     		},
     		p: function update(ctx, [dirty]) {
-    			if (dirty & /*nodes, Math, nodeWidth*/ 9) {
-    				each_value_1 = /*nodes*/ ctx[0];
+    			if (dirty & /*nodes, nodeWidth, color, Math*/ 100) {
+    				each_value_1 = /*nodes*/ ctx[2];
     				validate_each_argument(each_value_1);
     				let i;
 
@@ -19606,7 +19598,7 @@ var app = (function () {
     					} else {
     						each_blocks_1[i] = create_each_block_1(child_ctx);
     						each_blocks_1[i].c();
-    						each_blocks_1[i].m(svg, g);
+    						each_blocks_1[i].m(div0, null);
     					}
     				}
 
@@ -19617,8 +19609,16 @@ var app = (function () {
     				each_blocks_1.length = each_value_1.length;
     			}
 
-    			if (dirty & /*path, links, Math, parseInt*/ 6) {
-    				each_value = /*links*/ ctx[1];
+    			if (!current || dirty & /*width*/ 1) {
+    				set_style(div0, "width", /*width*/ ctx[0] + "px");
+    			}
+
+    			if (!current || dirty & /*height*/ 2) {
+    				set_style(div0, "height", /*height*/ ctx[1] + "px");
+    			}
+
+    			if (dirty & /*path, links, Math, parseInt*/ 24) {
+    				each_value = /*links*/ ctx[3];
     				validate_each_argument(each_value);
     				let i;
 
@@ -19641,9 +19641,21 @@ var app = (function () {
     				each_blocks.length = each_value.length;
     			}
 
+    			if (!current || dirty & /*width, height*/ 3 && svg_viewBox_value !== (svg_viewBox_value = "0,0," + /*width*/ ctx[0] + "," + /*height*/ ctx[1])) {
+    				attr_dev(svg, "viewBox", svg_viewBox_value);
+    			}
+
+    			if (!current || dirty & /*width*/ 1) {
+    				attr_dev(svg, "width", /*width*/ ctx[0]);
+    			}
+
+    			if (!current || dirty & /*height*/ 2) {
+    				attr_dev(svg, "height", /*height*/ ctx[1]);
+    			}
+
     			if (default_slot) {
-    				if (default_slot.p && dirty & /*$$scope*/ 32) {
-    					default_slot.p(get_slot_context(default_slot_template, ctx, /*$$scope*/ ctx[5], null), get_slot_changes(default_slot_template, /*$$scope*/ ctx[5], dirty, null));
+    				if (default_slot.p && dirty & /*$$scope*/ 256) {
+    					default_slot.p(get_slot_context(default_slot_template, ctx, /*$$scope*/ ctx[8], null), get_slot_changes(default_slot_template, /*$$scope*/ ctx[8], dirty, null));
     				}
     			}
     		},
@@ -19657,10 +19669,10 @@ var app = (function () {
     			current = false;
     		},
     		d: function destroy(detaching) {
-    			if (detaching) detach_dev(svg);
+    			if (detaching) detach_dev(div1);
     			destroy_each(each_blocks_1, detaching);
     			destroy_each(each_blocks, detaching);
-    			if (detaching) detach_dev(t);
+    			if (detaching) detach_dev(t1);
     			if (default_slot) default_slot.d(detaching);
     		}
     	};
@@ -19678,14 +19690,17 @@ var app = (function () {
 
     function instance($$self, $$props, $$invalidate) {
     	let { data = [] } = $$props;
-    	let { nodes, links, path, nodeWidth } = build(data);
+    	let { width = 800 } = $$props;
+    	let { height = 500 } = $$props;
+    	let { nodes, links, path, nodeWidth } = build(data, width, height);
 
     	items.subscribe(all => {
     		
-    		$$invalidate(0, { nodes, links, path, nodeWidth } = build(all), nodes, $$invalidate(1, links), $$invalidate(2, path), $$invalidate(3, nodeWidth));
+    		$$invalidate(2, { nodes, links, path, nodeWidth } = build(all, width, height), nodes, $$invalidate(3, links), $$invalidate(4, path), $$invalidate(5, nodeWidth));
     	});
 
-    	const writable_props = ["data"];
+    	let color = "steelblue";
+    	const writable_props = ["data", "width", "height"];
 
     	Object.keys($$props).forEach(key => {
     		if (!~writable_props.indexOf(key) && key.slice(0, 2) !== "$$") console.warn(`<Sankey> was created with unknown prop '${key}'`);
@@ -19695,39 +19710,47 @@ var app = (function () {
     	validate_slots("Sankey", $$slots, ['default']);
 
     	$$self.$set = $$props => {
-    		if ("data" in $$props) $$invalidate(4, data = $$props.data);
-    		if ("$$scope" in $$props) $$invalidate(5, $$scope = $$props.$$scope);
+    		if ("data" in $$props) $$invalidate(7, data = $$props.data);
+    		if ("width" in $$props) $$invalidate(0, width = $$props.width);
+    		if ("height" in $$props) $$invalidate(1, height = $$props.height);
+    		if ("$$scope" in $$props) $$invalidate(8, $$scope = $$props.$$scope);
     	};
 
     	$$self.$capture_state = () => ({
     		build,
     		items,
     		data,
+    		width,
+    		height,
     		nodes,
     		links,
     		path,
-    		nodeWidth
+    		nodeWidth,
+    		color
     	});
 
     	$$self.$inject_state = $$props => {
-    		if ("data" in $$props) $$invalidate(4, data = $$props.data);
-    		if ("nodes" in $$props) $$invalidate(0, nodes = $$props.nodes);
-    		if ("links" in $$props) $$invalidate(1, links = $$props.links);
-    		if ("path" in $$props) $$invalidate(2, path = $$props.path);
-    		if ("nodeWidth" in $$props) $$invalidate(3, nodeWidth = $$props.nodeWidth);
+    		if ("data" in $$props) $$invalidate(7, data = $$props.data);
+    		if ("width" in $$props) $$invalidate(0, width = $$props.width);
+    		if ("height" in $$props) $$invalidate(1, height = $$props.height);
+    		if ("nodes" in $$props) $$invalidate(2, nodes = $$props.nodes);
+    		if ("links" in $$props) $$invalidate(3, links = $$props.links);
+    		if ("path" in $$props) $$invalidate(4, path = $$props.path);
+    		if ("nodeWidth" in $$props) $$invalidate(5, nodeWidth = $$props.nodeWidth);
+    		if ("color" in $$props) $$invalidate(6, color = $$props.color);
     	};
 
     	if ($$props && "$$inject" in $$props) {
     		$$self.$inject_state($$props.$$inject);
     	}
 
-    	return [nodes, links, path, nodeWidth, data, $$scope, $$slots];
+    	return [width, height, nodes, links, path, nodeWidth, color, data, $$scope, $$slots];
     }
 
     class Sankey extends SvelteComponentDev {
     	constructor(options) {
     		super(options);
-    		init(this, options, instance, create_fragment, safe_not_equal, { data: 4 });
+    		init(this, options, instance, create_fragment, safe_not_equal, { data: 7, width: 0, height: 1 });
 
     		dispatch_dev("SvelteRegisterComponent", {
     			component: this,
@@ -19742,6 +19765,22 @@ var app = (function () {
     	}
 
     	set data(value) {
+    		throw new Error("<Sankey>: Props cannot be set directly on the component instance unless compiling with 'accessors: true' or '<svelte:options accessors/>'");
+    	}
+
+    	get width() {
+    		throw new Error("<Sankey>: Props cannot be read directly from the component instance unless compiling with 'accessors: true' or '<svelte:options accessors/>'");
+    	}
+
+    	set width(value) {
+    		throw new Error("<Sankey>: Props cannot be set directly on the component instance unless compiling with 'accessors: true' or '<svelte:options accessors/>'");
+    	}
+
+    	get height() {
+    		throw new Error("<Sankey>: Props cannot be read directly from the component instance unless compiling with 'accessors: true' or '<svelte:options accessors/>'");
+    	}
+
+    	set height(value) {
     		throw new Error("<Sankey>: Props cannot be set directly on the component instance unless compiling with 'accessors: true' or '<svelte:options accessors/>'");
     	}
     }
@@ -19867,7 +19906,8 @@ var app = (function () {
     			props: {
     				source: "NHL",
     				target: "Leafs",
-    				value: "8"
+    				value: "8",
+    				order: 1
     			},
     			$$inline: true
     		});

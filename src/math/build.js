@@ -3,14 +3,11 @@ let d4 = Object.assign({}, d3)
 import sankey from './plugin'
 d4.sankey = sankey
 
-const build = function (data) {
+const build = function (data, width, height) {
   // unique values of an array
   const onlyUnique = function (value, index, self) {
     return self.indexOf(value) === index
   }
-
-  let width = 800
-  let height = 580
 
   let sanKey = d4
     .sankey()
