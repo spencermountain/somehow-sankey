@@ -8,11 +8,7 @@ const onlyUnique = function (value, index, self) {
 }
 
 const build = function (data, width, height) {
-  let sanKey = d4
-    .sankey()
-    .nodeWidth(150)
-    .nodePadding(height / 10)
-    .size([width, height])
+  let sanKey = d4.sankey().nodeWidth(150).nodePadding(50).size([width, height])
 
   let path = sanKey.link()
 

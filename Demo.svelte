@@ -2,11 +2,16 @@
   import { Sankey, Node } from './src'
 </script>
 
-<Sankey>
-  <Node name="NHL" to="Leafs" value="8" />
-  <Node name="Tickets" to="Leafs" value="50" />
-  <Node name="In-Arena" to="Leafs" value="20" />
-  <Node name="LocalTV" to="Leafs" value="5" />
-  <Node name="Leafs" to="Player Salary" value="75" />
-  <Node name="Leafs" to="Coach" value="6" />
+<Sankey height="1000">
+  <Node name="Toronto" to="Canada" value="6" />
+  <Node name="Ontario" to="Canada" value="7.7" color="sky" />
+
+  <Node name="Montreal" to="Canada" value="4" />
+  <Node name="Quebec" to="Canada" value="2.5" />
+
+  <Node name="Vancouver" to="Canada" value="2.4" color="greypurple" />
+  <Node name="B.C." to="Canada" value="2.2" color="burn" />
+
+  <Node name="rest" to="Canada" value="7.9" opacity="0.6" />
+
 </Sankey>

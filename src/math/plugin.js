@@ -63,7 +63,24 @@ module.exports = function () {
         x3 = xi(1 - curvature),
         y0 = d.source.y + d.sy + d.dy / 2,
         y1 = d.target.y + d.ty + d.dy / 2
-      return 'M' + x0 + ',' + y0 + 'C' + x2 + ',' + y0 + ' ' + x3 + ',' + y1 + ' ' + x1 + ',' + y1
+      return (
+        'M' +
+        x0 +
+        ',' +
+        y0 +
+        'C' +
+        x2 +
+        ',' +
+        y0 +
+        ' ' +
+        x3 +
+        ',' +
+        y1 +
+        ' ' +
+        x1 +
+        ',' +
+        y1
+      )
     }
 
     link.curvature = function (_) {
@@ -95,10 +112,26 @@ module.exports = function () {
   // Compute the value (size) of each node by summing the associated links.
   function computeNodeValues() {
     nodes.forEach(function (node) {
-      node.value = Math.max(d3.sum(node.sourceLinks, value), d3.sum(node.targetLinks, value))
+      node.value = Math.max(
+        d3.sum(node.sourceLinks, value),
+        d3.sum(node.targetLinks, value)
+      )
     })
   }
 
+  function moveSinksRight(x) {
+    nodes.forEach(function (node) {
+      if (!node.sourceLinks.length) {
+        node.x = x - 1
+      }
+    })
+  }
+
+  function scaleNodeBreadths(kx) {
+    nodes.forEach(function (node) {
+      node.x *= kx
+    })
+  }
   // Iteratively assign the breadth (x-position) for each node.
   // Nodes are assigned the maximum breadth of incoming neighbors plus one;
   // nodes with no incoming links are assigned breadth zero, while
@@ -128,38 +161,13 @@ module.exports = function () {
     scaleNodeBreadths((size[0] - nodeWidth) / (x - 1))
   }
 
-  function moveSourcesRight() {
-    nodes.forEach(function (node) {
-      if (!node.targetLinks.length) {
-        node.x =
-          d3.min(node.sourceLinks, function (d) {
-            return d.target.x
-          }) - 1
-      }
-    })
-  }
-
-  function moveSinksRight(x) {
-    nodes.forEach(function (node) {
-      if (!node.sourceLinks.length) {
-        node.x = x - 1
-      }
-    })
-  }
-
-  function scaleNodeBreadths(kx) {
-    nodes.forEach(function (node) {
-      node.x *= kx
-    })
-  }
-
   function computeNodeDepths(iterations) {
     var nodesByBreadth = d3
       .nest()
       .key(function (d) {
         return d.x
       })
-      .sortKeys(d3.ascending)
+      // .sortKeys(d3.ascending)
       .entries(nodes)
       .map(function (d) {
         return d.values
@@ -167,17 +175,19 @@ module.exports = function () {
 
     //
     initializeNodeDepth()
-    resolveCollisions()
+    // resolveCollisions()
     for (var alpha = 1; iterations > 0; --iterations) {
       relaxRightToLeft((alpha *= 0.99))
-      resolveCollisions()
+      // resolveCollisions()
       relaxLeftToRight(alpha)
       resolveCollisions()
     }
 
     function initializeNodeDepth() {
       var ky = d3.min(nodesByBreadth, function (nodes) {
-        return (size[1] - (nodes.length - 1) * nodePadding) / d3.sum(nodes, value)
+        return (
+          (size[1] - (nodes.length - 1) * nodePadding) / d3.sum(nodes, value)
+        )
       })
 
       nodesByBreadth.forEach(function (nodes) {
@@ -196,7 +206,9 @@ module.exports = function () {
       nodesByBreadth.forEach(function (nodes, breadth) {
         nodes.forEach(function (node) {
           if (node.targetLinks.length) {
-            var y = d3.sum(node.targetLinks, weightedSource) / d3.sum(node.targetLinks, value)
+            var y =
+              d3.sum(node.targetLinks, weightedSource) /
+              d3.sum(node.targetLinks, value)
             node.y += (y - center(node)) * alpha
           }
         })
@@ -214,7 +226,9 @@ module.exports = function () {
         .forEach(function (nodes) {
           nodes.forEach(function (node) {
             if (node.sourceLinks.length) {
-              var y = d3.sum(node.sourceLinks, weightedTarget) / d3.sum(node.sourceLinks, value)
+              var y =
+                d3.sum(node.sourceLinks, weightedTarget) /
+                d3.sum(node.sourceLinks, value)
               node.y += (y - center(node)) * alpha
             }
           })
@@ -234,7 +248,7 @@ module.exports = function () {
           i
 
         // Push any overlapping nodes down.
-        nodes.sort(ascendingDepth)
+        // nodes.sort(ascendingDepth)
         for (i = 0; i < n; ++i) {
           node = nodes[i]
           dy = y0 - node.y
@@ -265,8 +279,8 @@ module.exports = function () {
 
   function computeLinkDepths() {
     nodes.forEach(function (node) {
-      node.sourceLinks.sort(ascendingTargetDepth)
-      node.targetLinks.sort(ascendingSourceDepth)
+      // node.sourceLinks.sort(ascendingTargetDepth)
+      // node.targetLinks.sort(ascendingSourceDepth)
     })
     nodes.forEach(function (node) {
       var sy = 0,
