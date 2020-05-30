@@ -157,6 +157,9 @@ module.exports = function () {
       nextNodes = []
       remainingNodes.forEach(function (node) {
         node.x = x
+        // if (node.meta && node.meta.col !== undefined) {
+        //   node.x = Number(node.meta.col)
+        // }
         node.dx = nodeWidth
         node.sourceLinks.forEach(function (link) {
           if (nextNodes.indexOf(link.target) < 0) {
@@ -167,6 +170,8 @@ module.exports = function () {
       remainingNodes = nextNodes
       ++x
     }
+
+    // console.log(nodes)
 
     //
     moveSinksRight(x)

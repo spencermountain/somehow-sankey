@@ -1,18 +1,22 @@
 <script>
   import build from './math/build'
   import { items } from './store.js'
+  import { onMount } from 'svelte'
   import c from 'spencer-color'
   let colors = c.colors
   export let data = []
   export let width = 800
   export let height = 500
-  let { nodes, links, path, nodeWidth } = build(data, width, height)
-  items.subscribe(all => {
-    ;({ nodes, links, path, nodeWidth } = build(all, width, height))
-    // console.log(nodes, links, path)
-  })
+  let nodes = [],
+    links = [],
+    path = () => {},
+    nodeWidth = 1
+
   let color = 'steelblue'
   let accent = '#d98b89'
+  onMount(() => {
+    ;({ nodes, links, path, nodeWidth } = build($items, width, height))
+  })
 </script>
 
 <style>
