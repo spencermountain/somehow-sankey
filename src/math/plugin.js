@@ -9,36 +9,16 @@ function value(link) {
   return link.value
 }
 
-module.exports = function () {
+module.exports = function (width, height, nodeWidth) {
   var sankey = {},
-    nodeWidth = 24,
     nodePadding = 12,
-    size = [1, 1],
+    size = [width, height],
     nodes = [],
-    links = [],
-    meta = {}
+    links = []
 
-  sankey.nodeWidth = function (_) {
-    if (!arguments.length) return nodeWidth
-    nodeWidth = +_
-    return sankey
+  sankey.nodeWidth = function () {
+    return nodeWidth
   }
-
-  sankey.nodes = function (_) {
-    if (!arguments.length) return nodes
-    nodes = _
-    nodes.forEach((o) => {
-      meta[o.name] = o
-    })
-    return sankey
-  }
-
-  sankey.links = function (_) {
-    if (!arguments.length) return links
-    links = _
-    return sankey
-  }
-
   sankey.size = function (_) {
     if (!arguments.length) return size
     size = _
@@ -46,7 +26,9 @@ module.exports = function () {
   }
 
   // this is the main thing.
-  sankey.layout = function () {
+  sankey.layout = function (ns, ls) {
+    nodes = ns
+    links = ls
     computeNodeLinks()
     computeNodeValues()
     computeNodeX()
@@ -132,17 +114,6 @@ module.exports = function () {
   }
 
   function computeNodeY(iterations) {
-    // var nodesByCol = d3
-    //   .nest()
-    //   .key(function (d) {
-    //     return d.x
-    //   })
-    //   // .sortKeys(d3.ascending)
-    //   .entries(nodes)
-    //   .map(function (d) {
-    //     return d.values
-    //   })
-    // console.log(nodesByCol)
     let nodesByCol = []
     nodes.forEach((node) => {
       let col = 0
@@ -154,7 +125,7 @@ module.exports = function () {
     })
     // make sure it never goes backwards
 
-    //
+    //set y to byCol index
     nodeStartY()
     // resolveCollisions()
     // for (var alpha = 1; iterations > 0; --iterations) {
@@ -162,7 +133,8 @@ module.exports = function () {
     // // resolveCollisions()
     // relaxLeftToRight(alpha)
     // }
-    resolveCollisions()
+    // console.log(nodes)
+    computeY()
 
     function nodeStartY() {
       var ky = d3.min(nodesByCol, function (nodes) {
@@ -171,6 +143,7 @@ module.exports = function () {
         )
       })
 
+      // set y to byCol index
       nodesByCol.forEach(function (nodes) {
         nodes.forEach(function (node, i) {
           node.y = i
@@ -183,74 +156,34 @@ module.exports = function () {
       })
     }
 
-    function relaxLeftToRight(alpha) {
-      nodesByCol.forEach(function (nodes, breadth) {
-        nodes.forEach(function (node) {
-          if (node.targetLinks.length) {
-            var y =
-              d3.sum(node.targetLinks, weightedSource) /
-              d3.sum(node.targetLinks, value)
-            node.y += (y - center(node)) * alpha
-          }
-        })
-      })
-
-      function weightedSource(link) {
-        return 0 //center(link.source) * link.value
-      }
-    }
-
-    function relaxRightToLeft(alpha) {
-      nodesByCol
-        .slice()
-        .reverse()
-        .forEach(function (nodes) {
-          nodes.forEach(function (node) {
-            if (node.sourceLinks.length) {
-              var y =
-                d3.sum(node.sourceLinks, weightedTarget) /
-                d3.sum(node.sourceLinks, value)
-              node.y += (y - center(node)) * alpha
-            }
-          })
-        })
-
-      function weightedTarget(link) {
-        // console.log(link.target)
-        return center(link.target) * link.value
-      }
-    }
-
-    function resolveCollisions() {
-      nodesByCol.forEach(function (nodes) {
+    function computeY() {
+      nodesByCol.forEach(function (colNodes) {
         var node,
           dy,
           y0 = 0,
-          n = nodes.length,
+          n = colNodes.length,
           i
-
         // Push any overlapping nodes down.
-        // nodes.sort(ascendingDepth)
         for (i = 0; i < n; ++i) {
-          node = nodes[i]
+          node = colNodes[i]
+
           dy = y0 - node.y
-          if (dy > 0) node.y += dy
+          if (dy > 0) {
+            node.y += dy
+          }
           y0 = node.y + node.dy + nodePadding
         }
-
-        // If the bottommost node goes outside the bounds, push it back up.
-        // dy = y0 - nodePadding - size[1]
-        // if (dy > 0) {
-        //   y0 = node.y -= dy
-
-        //   // Push any overlapping nodes back up.
-        //   for (i = n - 2; i >= 0; --i) {
-        //     node = nodes[i]
-        //     dy = node.y + node.dy + nodePadding - y0
-        //     if (dy > 0) node.y -= dy
-        //     y0 = node.y
-        //   }
-        // }
+      })
+      nodesByCol.forEach(function (colNodes) {
+        colNodes.forEach((no) => {
+          if (no.sourceLinks[0]) {
+            let targetY = no.sourceLinks[0].target.y
+            if (targetY > no.y) {
+              // console.log(no.name, targetY)
+              no.y = targetY
+            }
+          }
+        })
       })
     }
   }

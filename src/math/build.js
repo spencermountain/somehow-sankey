@@ -2,13 +2,15 @@ import * as d3 from 'd3'
 let d4 = Object.assign({}, d3)
 import sankey from './plugin'
 d4.sankey = sankey
+
+const nodeWidth = 120
 // unique values of an array
 const onlyUnique = function (value, index, self) {
   return self.indexOf(value) === index
 }
 
 const build = function (data, width, height) {
-  let sanKey = d4.sankey().nodeWidth(150).size([width, height])
+  let sanKey = d4.sankey(width, height, nodeWidth)
 
   let path = sanKey.toPath()
   let meta = {}
@@ -46,7 +48,8 @@ const build = function (data, width, height) {
     }
   })
 
-  sanKey.nodes(nodes).links(links).layout(32)
+  sanKey.layout(nodes, links)
+  // add metadata back to each node
   nodes.forEach((n, i) => {
     if (n.meta) {
       n.color = n.meta.color
@@ -58,7 +61,7 @@ const build = function (data, width, height) {
     nodes: nodes,
     links,
     path,
-    nodeWidth: sanKey.nodeWidth(),
+    nodeWidth: nodeWidth,
   }
 }
 export default build

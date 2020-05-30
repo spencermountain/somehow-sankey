@@ -5,6 +5,7 @@
 <Sankey height="800">
   <Node name="Canada" color="red" col={2} />
   <Node name="Toronto" to="Ontario" value="6" col={0} />
+  <Node name="Ottawa" to="Ontario" value="1" col={0} />
   <Node name="Ontario" to="Canada" value="14" color="sky" col={1} />
 
   <Node name="Montreal" to="Quebec" value="4" color="orange" col={0} />

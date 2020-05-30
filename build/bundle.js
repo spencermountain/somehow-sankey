@@ -18973,13 +18973,27 @@ var app = (function () {
         zoomIdentity: identity$9
     });
 
+    function createCommonjsModule(fn, module) {
+    	return module = { exports: {} }, fn(module, module.exports), module.exports;
+    }
+
+    function getCjsExportFromNamespace (n) {
+    	return n && n['default'] || n;
+    }
+
+    function commonjsRequire () {
+    	throw new Error('Dynamic requires are not currently supported by @rollup/plugin-commonjs');
+    }
+
+    var d3$1 = getCjsExportFromNamespace(d3);
+
     var toPath = function () {
       var curvature = 0.4;
 
       function link(d) {
         var x0 = d.source.x + d.source.dx,
           x1 = d.target.x,
-          xi = d3.interpolateNumber(x0, x1),
+          xi = d3$1.interpolateNumber(x0, x1),
           x2 = xi(curvature),
           x3 = xi(1 - curvature),
           y0 = d.source.y + d.sy + d.dy / 2,
@@ -19017,36 +19031,16 @@ var app = (function () {
       return link.value
     }
 
-    var plugin = function () {
+    var plugin = function (width, height, nodeWidth) {
       var sankey = {},
-        nodeWidth = 24,
         nodePadding = 12,
-        size = [1, 1],
+        size = [width, height],
         nodes = [],
-        links = [],
-        meta = {};
+        links = [];
 
-      sankey.nodeWidth = function (_) {
-        if (!arguments.length) return nodeWidth
-        nodeWidth = +_;
-        return sankey
+      sankey.nodeWidth = function () {
+        return nodeWidth
       };
-
-      sankey.nodes = function (_) {
-        if (!arguments.length) return nodes
-        nodes = _;
-        nodes.forEach((o) => {
-          meta[o.name] = o;
-        });
-        return sankey
-      };
-
-      sankey.links = function (_) {
-        if (!arguments.length) return links
-        links = _;
-        return sankey
-      };
-
       sankey.size = function (_) {
         if (!arguments.length) return size
         size = _;
@@ -19054,7 +19048,9 @@ var app = (function () {
       };
 
       // this is the main thing.
-      sankey.layout = function () {
+      sankey.layout = function (ns, ls) {
+        nodes = ns;
+        links = ls;
         computeNodeLinks();
         computeNodeValues();
         computeNodeX();
@@ -19086,17 +19082,9 @@ var app = (function () {
       function computeNodeValues() {
         nodes.forEach(function (node) {
           node.value = Math.max(
-            d3.sum(node.sourceLinks, value),
-            d3.sum(node.targetLinks, value)
+            d3$1.sum(node.sourceLinks, value),
+            d3$1.sum(node.targetLinks, value)
           );
-        });
-      }
-
-      function moveSinksRight(x) {
-        nodes.forEach(function (node) {
-          if (!node.sourceLinks.length) {
-            node.x = x - 1;
-          }
         });
       }
 
@@ -19135,22 +19123,11 @@ var app = (function () {
         // console.log(nodes)
 
         //
-        moveSinksRight(x);
+        // moveSinksRight(x)
         scaleNodeBreadths((size[0] - nodeWidth) / (x - 1));
       }
 
       function computeNodeY(iterations) {
-        // var nodesByCol = d3
-        //   .nest()
-        //   .key(function (d) {
-        //     return d.x
-        //   })
-        //   // .sortKeys(d3.ascending)
-        //   .entries(nodes)
-        //   .map(function (d) {
-        //     return d.values
-        //   })
-        // console.log(nodesByCol)
         let nodesByCol = [];
         nodes.forEach((node) => {
           let col = 0;
@@ -19162,7 +19139,7 @@ var app = (function () {
         });
         // make sure it never goes backwards
 
-        //
+        //set y to byCol index
         nodeStartY();
         // resolveCollisions()
         // for (var alpha = 1; iterations > 0; --iterations) {
@@ -19170,15 +19147,18 @@ var app = (function () {
         // // resolveCollisions()
         // relaxLeftToRight(alpha)
         // }
-        resolveCollisions();
+        // console.log(nodes)
+        computeY();
+        computeY();
 
         function nodeStartY() {
-          var ky = d3.min(nodesByCol, function (nodes) {
+          var ky = d3$1.min(nodesByCol, function (nodes) {
             return (
-              (size[1] - (nodes.length - 1) * nodePadding) / d3.sum(nodes, value)
+              (size[1] - (nodes.length - 1) * nodePadding) / d3$1.sum(nodes, value)
             )
           });
 
+          // set y to byCol index
           nodesByCol.forEach(function (nodes) {
             nodes.forEach(function (node, i) {
               node.y = i;
@@ -19191,36 +19171,36 @@ var app = (function () {
           });
         }
 
-        function resolveCollisions() {
-          nodesByCol.forEach(function (nodes) {
+        function computeY() {
+          nodesByCol.forEach(function (colNodes) {
             var node,
               dy,
               y0 = 0,
-              n = nodes.length,
+              n = colNodes.length,
               i;
 
             // Push any overlapping nodes down.
             // nodes.sort(ascendingDepth)
             for (i = 0; i < n; ++i) {
-              node = nodes[i];
+              node = colNodes[i];
+
               dy = y0 - node.y;
-              if (dy > 0) node.y += dy;
+              if (dy > 0) {
+                node.y += dy;
+              }
               y0 = node.y + node.dy + nodePadding;
             }
-
-            // If the bottommost node goes outside the bounds, push it back up.
-            // dy = y0 - nodePadding - size[1]
-            // if (dy > 0) {
-            //   y0 = node.y -= dy
-
-            //   // Push any overlapping nodes back up.
-            //   for (i = n - 2; i >= 0; --i) {
-            //     node = nodes[i]
-            //     dy = node.y + node.dy + nodePadding - y0
-            //     if (dy > 0) node.y -= dy
-            //     y0 = node.y
-            //   }
-            // }
+          });
+          nodesByCol.forEach(function (colNodes) {
+            colNodes.forEach((no) => {
+              if (no.sourceLinks[0]) {
+                let targetY = no.sourceLinks[0].target.y;
+                if (targetY > no.y) {
+                  no.y = targetY;
+                  console.log(no.name, targetY);
+                }
+              }
+            });
           });
         }
       }
@@ -19245,13 +19225,15 @@ var app = (function () {
 
     let d4 = Object.assign({}, d3);
     d4.sankey = plugin;
+
+    const nodeWidth = 120;
     // unique values of an array
     const onlyUnique = function (value, index, self) {
       return self.indexOf(value) === index
     };
 
     const build = function (data, width, height) {
-      let sanKey = d4.sankey().nodeWidth(150).size([width, height]);
+      let sanKey = d4.sankey(width, height, nodeWidth);
 
       let path = sanKey.toPath();
       let meta = {};
@@ -19289,7 +19271,8 @@ var app = (function () {
         }
       });
 
-      sanKey.nodes(nodes).links(links).layout(32);
+      sanKey.layout(nodes, links);
+      // add metadata back to each node
       nodes.forEach((n, i) => {
         if (n.meta) {
           n.color = n.meta.color;
@@ -19301,7 +19284,7 @@ var app = (function () {
         nodes: nodes,
         links,
         path,
-        nodeWidth: sanKey.nodeWidth(),
+        nodeWidth: nodeWidth,
       }
     };
 
@@ -19358,14 +19341,6 @@ var app = (function () {
     }
 
     const items = writable([]);
-
-    function createCommonjsModule(fn, module) {
-    	return module = { exports: {} }, fn(module, module.exports), module.exports;
-    }
-
-    function commonjsRequire () {
-    	throw new Error('Dynamic requires are not currently supported by @rollup/plugin-commonjs');
-    }
 
     var spencerColor = createCommonjsModule(function (module, exports) {
     !function(e){module.exports=e();}(function(){return function u(i,a,c){function f(r,e){if(!a[r]){if(!i[r]){var o="function"==typeof commonjsRequire&&commonjsRequire;if(!e&&o)return o(r,!0);if(d)return d(r,!0);var n=new Error("Cannot find module '"+r+"'");throw n.code="MODULE_NOT_FOUND",n}var t=a[r]={exports:{}};i[r][0].call(t.exports,function(e){return f(i[r][1][e]||e)},t,t.exports,u,i,a,c);}return a[r].exports}for(var d="function"==typeof commonjsRequire&&commonjsRequire,e=0;e<c.length;e++)f(c[e]);return f}({1:[function(e,r,o){r.exports={blue:"#6699cc",green:"#6accb2",yellow:"#e1e6b3",red:"#cc7066",pink:"#F2C0BB",brown:"#705E5C",orange:"#cc8a66",purple:"#d8b3e6",navy:"#335799",olive:"#7f9c6c",fuscia:"#735873",beige:"#e6d7b3",slate:"#8C8C88",suede:"#9c896c",burnt:"#603a39",sea:"#50617A",sky:"#2D85A8",night:"#303b50",rouge:"#914045",grey:"#838B91",mud:"#C4ABAB",royal:"#275291",cherry:"#cc6966",tulip:"#e6b3bc",rose:"#D68881",fire:"#AB5850",greyblue:"#72697D",greygreen:"#8BA3A2",greypurple:"#978BA3",burn:"#6D5685",slategrey:"#bfb0b3",light:"#a3a5a5",lighter:"#d7d5d2",fudge:"#4d4d4d",lightgrey:"#949a9e",white:"#fbfbfb",dimgrey:"#606c74",softblack:"#463D4F",dark:"#443d3d",black:"#333333"};},{}],2:[function(e,r,o){var n=e("./colors"),t={juno:["blue","mud","navy","slate","pink","burn"],barrow:["rouge","red","orange","burnt","brown","greygreen"],roma:["#8a849a","#b5b0bf","rose","lighter","greygreen","mud"],palmer:["red","navy","olive","pink","suede","sky"],mark:["#848f9a","#9aa4ac","slate","#b0b8bf","mud","grey"],salmon:["sky","sea","fuscia","slate","mud","fudge"],dupont:["green","brown","orange","red","olive","blue"],bloor:["night","navy","beige","rouge","mud","grey"],yukon:["mud","slate","brown","sky","beige","red"],david:["blue","green","yellow","red","pink","light"],neste:["mud","cherry","royal","rouge","greygreen","greypurple"],ken:["red","sky","#c67a53","greygreen","#dfb59f","mud"]};Object.keys(t).forEach(function(e){t[e]=t[e].map(function(e){return n[e]||e});}),r.exports=t;},{"./colors":1}],3:[function(e,r,o){var n=e("./colors"),t=e("./combos"),u={colors:n,list:Object.keys(n).map(function(e){return n[e]}),combos:t};r.exports=u;},{"./colors":1,"./combos":2}]},{},[3])(3)});
@@ -20079,6 +20054,7 @@ var app = (function () {
     	let t8;
     	let t9;
     	let t10;
+    	let t11;
     	let current;
 
     	const node0 = new Node$2({
@@ -20098,6 +20074,16 @@ var app = (function () {
 
     	const node2 = new Node$2({
     			props: {
+    				name: "Ottawa",
+    				to: "Ontario",
+    				value: "1",
+    				col: 0
+    			},
+    			$$inline: true
+    		});
+
+    	const node3 = new Node$2({
+    			props: {
     				name: "Ontario",
     				to: "Canada",
     				value: "14",
@@ -20107,7 +20093,7 @@ var app = (function () {
     			$$inline: true
     		});
 
-    	const node3 = new Node$2({
+    	const node4 = new Node$2({
     			props: {
     				name: "Montreal",
     				to: "Quebec",
@@ -20118,7 +20104,7 @@ var app = (function () {
     			$$inline: true
     		});
 
-    	const node4 = new Node$2({
+    	const node5 = new Node$2({
     			props: {
     				name: "Quebec",
     				to: "Canada",
@@ -20129,7 +20115,7 @@ var app = (function () {
     			$$inline: true
     		});
 
-    	const node5 = new Node$2({
+    	const node6 = new Node$2({
     			props: {
     				name: "Vancouver",
     				to: "B.C.",
@@ -20140,7 +20126,7 @@ var app = (function () {
     			$$inline: true
     		});
 
-    	const node6 = new Node$2({
+    	const node7 = new Node$2({
     			props: {
     				name: "B.C.",
     				to: "Canada",
@@ -20151,7 +20137,7 @@ var app = (function () {
     			$$inline: true
     		});
 
-    	const node7 = new Node$2({
+    	const node8 = new Node$2({
     			props: {
     				name: "Alberta",
     				to: "Canada",
@@ -20162,7 +20148,7 @@ var app = (function () {
     			$$inline: true
     		});
 
-    	const node8 = new Node$2({
+    	const node9 = new Node$2({
     			props: {
     				name: "Nova Scota",
     				to: "Canada",
@@ -20173,7 +20159,7 @@ var app = (function () {
     			$$inline: true
     		});
 
-    	const node9 = new Node$2({
+    	const node10 = new Node$2({
     			props: {
     				name: "Manitoba",
     				to: "Canada",
@@ -20184,7 +20170,7 @@ var app = (function () {
     			$$inline: true
     		});
 
-    	const node10 = new Node$2({
+    	const node11 = new Node$2({
     			props: {
     				name: "Saskatchewan",
     				to: "Canada",
@@ -20195,7 +20181,7 @@ var app = (function () {
     			$$inline: true
     		});
 
-    	const node11 = new Node$2({
+    	const node12 = new Node$2({
     			props: {
     				name: "rest",
     				to: "Canada",
@@ -20231,6 +20217,8 @@ var app = (function () {
     			create_component(node10.$$.fragment);
     			t10 = space();
     			create_component(node11.$$.fragment);
+    			t11 = space();
+    			create_component(node12.$$.fragment);
     		},
     		m: function mount(target, anchor) {
     			mount_component(node0, target, anchor);
@@ -20256,6 +20244,8 @@ var app = (function () {
     			mount_component(node10, target, anchor);
     			insert_dev(target, t10, anchor);
     			mount_component(node11, target, anchor);
+    			insert_dev(target, t11, anchor);
+    			mount_component(node12, target, anchor);
     			current = true;
     		},
     		p: noop,
@@ -20273,6 +20263,7 @@ var app = (function () {
     			transition_in(node9.$$.fragment, local);
     			transition_in(node10.$$.fragment, local);
     			transition_in(node11.$$.fragment, local);
+    			transition_in(node12.$$.fragment, local);
     			current = true;
     		},
     		o: function outro(local) {
@@ -20288,6 +20279,7 @@ var app = (function () {
     			transition_out(node9.$$.fragment, local);
     			transition_out(node10.$$.fragment, local);
     			transition_out(node11.$$.fragment, local);
+    			transition_out(node12.$$.fragment, local);
     			current = false;
     		},
     		d: function destroy(detaching) {
@@ -20314,6 +20306,8 @@ var app = (function () {
     			destroy_component(node10, detaching);
     			if (detaching) detach_dev(t10);
     			destroy_component(node11, detaching);
+    			if (detaching) detach_dev(t11);
+    			destroy_component(node12, detaching);
     		}
     	};
 
