@@ -19031,6 +19031,67 @@ var app = (function () {
       return link.value
     }
 
+    var nodeStartY = function (nodesByCol, links, size, nodePadding) {
+      var ky = d3$1.min(nodesByCol, function (nodes) {
+        return (size[1] - (nodes.length - 1) * nodePadding) / d3$1.sum(nodes, value)
+      });
+
+      // set y to byCol index
+      nodesByCol.forEach(function (nodes) {
+        nodes.forEach(function (node, i) {
+          node.y = i;
+          node.dy = node.value * ky;
+        });
+      });
+
+      links.forEach(function (link) {
+        link.dy = link.value * ky;
+      });
+    };
+
+    var computeY = function (nodesByCol, nodePadding) {
+      nodesByCol.forEach(function (colNodes) {
+        var node,
+          dy,
+          y0 = 0,
+          n = colNodes.length,
+          i;
+        // Push any overlapping nodes down.
+        for (i = 0; i < n; ++i) {
+          node = colNodes[i];
+
+          dy = y0 - node.y;
+          if (dy > 0) {
+            node.y += dy;
+          }
+          y0 = node.y + node.dy + nodePadding;
+        }
+      });
+      // ensure it's below input
+      nodesByCol.forEach(function (colNodes) {
+        colNodes.forEach((no) => {
+          if (no.sourceLinks[0]) {
+            let targetY = no.sourceLinks[0].target.y;
+            if (targetY > no.y) {
+              // console.log(no.name, targetY)
+              no.y = targetY;
+            }
+          }
+        });
+      });
+    };
+
+    var nodeLayout = {
+    	nodeStartY: nodeStartY,
+    	computeY: computeY
+    };
+
+    const { nodeStartY: nodeStartY$1, computeY: computeY$1 } = nodeLayout;
+
+    function value$1(link) {
+      return link.value
+    }
+
     var plugin = function (width, height, nodeWidth) {
       var sankey = {},
         nodePadding = 12,
@@ -19047,18 +19108,6 @@ var app = (function () {
         return sankey
       };
 
-      // this is the main thing.
-      sankey.layout = function (ns, ls) {
-        nodes = ns;
-        links = ls;
-        computeNodeLinks();
-        computeNodeValues();
-        computeNodeX();
-        computeNodeY();
-        computeLinkDepths();
-        return sankey
-      };
-
       sankey.toPath = toPath;
 
       // Populate the sourceLinks and targetLinks for each node.
@@ -19069,10 +19118,14 @@ var app = (function () {
           node.targetLinks = [];
         });
         links.forEach(function (link) {
-          var source = link.source,
-            target = link.target;
-          if (typeof source === 'number') source = link.source = nodes[link.source];
-          if (typeof target === 'number') target = link.target = nodes[link.target];
+          let source = link.source;
+          let target = link.target;
+          if (typeof source === 'number') {
+            source = link.source = nodes[link.source];
+          }
+          if (typeof target === 'number') {
+            target = link.target = nodes[link.target];
+          }
           source.sourceLinks.push(link);
           target.targetLinks.push(link);
         });
@@ -19082,8 +19135,8 @@ var app = (function () {
       function computeNodeValues() {
         nodes.forEach(function (node) {
           node.value = Math.max(
-            d3$1.sum(node.sourceLinks, value),
-            d3$1.sum(node.targetLinks, value)
+            d3$1.sum(node.sourceLinks, value$1),
+            d3$1.sum(node.targetLinks, value$1)
           );
         });
       }
@@ -19127,7 +19180,7 @@ var app = (function () {
         scaleNodeBreadths((size[0] - nodeWidth) / (x - 1));
       }
 
-      function computeNodeY(iterations) {
+      function computeNodeY() {
         let nodesByCol = [];
         nodes.forEach((node) => {
           let col = 0;
@@ -19140,69 +19193,8 @@ var app = (function () {
         // make sure it never goes backwards
 
         //set y to byCol index
-        nodeStartY();
-        // resolveCollisions()
-        // for (var alpha = 1; iterations > 0; --iterations) {
-        // relaxRightToLeft((alpha *= 0.99))
-        // // resolveCollisions()
-        // relaxLeftToRight(alpha)
-        // }
-        // console.log(nodes)
-        computeY();
-        computeY();
-
-        function nodeStartY() {
-          var ky = d3$1.min(nodesByCol, function (nodes) {
-            return (
-              (size[1] - (nodes.length - 1) * nodePadding) / d3$1.sum(nodes, value)
-            )
-          });
-
-          // set y to byCol index
-          nodesByCol.forEach(function (nodes) {
-            nodes.forEach(function (node, i) {
-              node.y = i;
-              node.dy = node.value * ky;
-            });
-          });
-
-          links.forEach(function (link) {
-            link.dy = link.value * ky;
-          });
-        }
-
-        function computeY() {
-          nodesByCol.forEach(function (colNodes) {
-            var node,
-              dy,
-              y0 = 0,
-              n = colNodes.length,
-              i;
-
-            // Push any overlapping nodes down.
-            // nodes.sort(ascendingDepth)
-            for (i = 0; i < n; ++i) {
-              node = colNodes[i];
-
-              dy = y0 - node.y;
-              if (dy > 0) {
-                node.y += dy;
-              }
-              y0 = node.y + node.dy + nodePadding;
-            }
-          });
-          nodesByCol.forEach(function (colNodes) {
-            colNodes.forEach((no) => {
-              if (no.sourceLinks[0]) {
-                let targetY = no.sourceLinks[0].target.y;
-                if (targetY > no.y) {
-                  no.y = targetY;
-                  console.log(no.name, targetY);
-                }
-              }
-            });
-          });
-        }
+        nodeStartY$1(nodesByCol, links, size, nodePadding);
+        computeY$1(nodesByCol, nodePadding);
       }
 
       function computeLinkDepths() {
@@ -19219,7 +19211,17 @@ var app = (function () {
           });
         });
       }
-
+      // this is the main thing.
+      sankey.layout = function (ns, ls) {
+        nodes = ns;
+        links = ls;
+        computeNodeLinks();
+        computeNodeValues();
+        computeNodeX();
+        computeNodeY();
+        computeLinkDepths();
+        return sankey
+      };
       return sankey
     };
 
@@ -19351,25 +19353,25 @@ var app = (function () {
 
     function get_each_context(ctx, list, i) {
     	const child_ctx = ctx.slice();
-    	child_ctx[13] = list[i];
+    	child_ctx[12] = list[i];
     	return child_ctx;
     }
 
     function get_each_context_1(ctx, list, i) {
     	const child_ctx = ctx.slice();
-    	child_ctx[13] = list[i];
+    	child_ctx[12] = list[i];
     	return child_ctx;
     }
 
-    // (58:4) {#each nodes as d}
+    // (57:4) {#each nodes as d}
     function create_each_block_1(ctx) {
     	let div2;
     	let div0;
-    	let t0_value = /*d*/ ctx[13].name + "";
+    	let t0_value = /*d*/ ctx[12].name + "";
     	let t0;
     	let t1;
     	let div1;
-    	let t2_value = Math.ceil(/*d*/ ctx[13].value * 100) / 100 + "";
+    	let t2_value = Math.ceil(/*d*/ ctx[12].value * 100) / 100 + "";
     	let t2;
     	let t3;
     	let t4;
@@ -19385,21 +19387,21 @@ var app = (function () {
     			t3 = text("m");
     			t4 = space();
     			attr_dev(div0, "class", "label");
-    			add_location(div0, file, 64, 8, 1544);
+    			add_location(div0, file, 63, 8, 1521);
     			attr_dev(div1, "class", "value svelte-sj91yl");
-    			set_style(div1, "color", /*colors*/ ctx[6][/*d*/ ctx[13].accent] || /*accent*/ ctx[8]);
-    			toggle_class(div1, "tiny", /*d*/ ctx[13].dy < 80);
-    			add_location(div1, file, 65, 8, 1586);
+    			set_style(div1, "color", /*colors*/ ctx[6][/*d*/ ctx[12].accent] || /*accent*/ ctx[8]);
+    			toggle_class(div1, "tiny", /*d*/ ctx[12].dy < 80);
+    			add_location(div1, file, 64, 8, 1563);
     			attr_dev(div2, "class", "node svelte-sj91yl");
-    			set_style(div2, "left", /*d*/ ctx[13].x + "px");
-    			set_style(div2, "top", /*d*/ ctx[13].y + "px");
+    			set_style(div2, "left", /*d*/ ctx[12].x + "px");
+    			set_style(div2, "top", /*d*/ ctx[12].y + "px");
     			set_style(div2, "width", /*nodeWidth*/ ctx[5] + "px");
-    			set_style(div2, "background-color", /*colors*/ ctx[6][/*d*/ ctx[13].color] || /*color*/ ctx[7]);
-    			set_style(div2, "height", (/*d*/ ctx[13].dy < 0 ? 0.1 : /*d*/ ctx[13].dy) + "px");
-    			set_style(div2, "border-bottom", "4px solid " + (/*colors*/ ctx[6][/*d*/ ctx[13].accent] || /*accent*/ ctx[8]));
-    			set_style(div2, "opacity", /*d*/ ctx[13].opacity || 1);
-    			toggle_class(div2, "tiny", /*d*/ ctx[13].dy < 80);
-    			add_location(div2, file, 58, 6, 1238);
+    			set_style(div2, "background-color", /*colors*/ ctx[6][/*d*/ ctx[12].color] || /*color*/ ctx[7]);
+    			set_style(div2, "height", (/*d*/ ctx[12].dy < 0 ? 0.1 : /*d*/ ctx[12].dy) + "px");
+    			set_style(div2, "border-bottom", "4px solid " + (/*colors*/ ctx[6][/*d*/ ctx[12].accent] || /*accent*/ ctx[8]));
+    			set_style(div2, "opacity", /*d*/ ctx[12].opacity || 1);
+    			toggle_class(div2, "tiny", /*d*/ ctx[12].dy < 80);
+    			add_location(div2, file, 57, 6, 1215);
     		},
     		m: function mount(target, anchor) {
     			insert_dev(target, div2, anchor);
@@ -19412,23 +19414,23 @@ var app = (function () {
     			append_dev(div2, t4);
     		},
     		p: function update(ctx, dirty) {
-    			if (dirty & /*nodes*/ 4 && t0_value !== (t0_value = /*d*/ ctx[13].name + "")) set_data_dev(t0, t0_value);
-    			if (dirty & /*nodes*/ 4 && t2_value !== (t2_value = Math.ceil(/*d*/ ctx[13].value * 100) / 100 + "")) set_data_dev(t2, t2_value);
+    			if (dirty & /*nodes*/ 4 && t0_value !== (t0_value = /*d*/ ctx[12].name + "")) set_data_dev(t0, t0_value);
+    			if (dirty & /*nodes*/ 4 && t2_value !== (t2_value = Math.ceil(/*d*/ ctx[12].value * 100) / 100 + "")) set_data_dev(t2, t2_value);
 
     			if (dirty & /*nodes*/ 4) {
-    				set_style(div1, "color", /*colors*/ ctx[6][/*d*/ ctx[13].accent] || /*accent*/ ctx[8]);
+    				set_style(div1, "color", /*colors*/ ctx[6][/*d*/ ctx[12].accent] || /*accent*/ ctx[8]);
     			}
 
     			if (dirty & /*nodes*/ 4) {
-    				toggle_class(div1, "tiny", /*d*/ ctx[13].dy < 80);
+    				toggle_class(div1, "tiny", /*d*/ ctx[12].dy < 80);
     			}
 
     			if (dirty & /*nodes*/ 4) {
-    				set_style(div2, "left", /*d*/ ctx[13].x + "px");
+    				set_style(div2, "left", /*d*/ ctx[12].x + "px");
     			}
 
     			if (dirty & /*nodes*/ 4) {
-    				set_style(div2, "top", /*d*/ ctx[13].y + "px");
+    				set_style(div2, "top", /*d*/ ctx[12].y + "px");
     			}
 
     			if (dirty & /*nodeWidth*/ 32) {
@@ -19436,23 +19438,23 @@ var app = (function () {
     			}
 
     			if (dirty & /*nodes*/ 4) {
-    				set_style(div2, "background-color", /*colors*/ ctx[6][/*d*/ ctx[13].color] || /*color*/ ctx[7]);
+    				set_style(div2, "background-color", /*colors*/ ctx[6][/*d*/ ctx[12].color] || /*color*/ ctx[7]);
     			}
 
     			if (dirty & /*nodes*/ 4) {
-    				set_style(div2, "height", (/*d*/ ctx[13].dy < 0 ? 0.1 : /*d*/ ctx[13].dy) + "px");
+    				set_style(div2, "height", (/*d*/ ctx[12].dy < 0 ? 0.1 : /*d*/ ctx[12].dy) + "px");
     			}
 
     			if (dirty & /*nodes*/ 4) {
-    				set_style(div2, "border-bottom", "4px solid " + (/*colors*/ ctx[6][/*d*/ ctx[13].accent] || /*accent*/ ctx[8]));
+    				set_style(div2, "border-bottom", "4px solid " + (/*colors*/ ctx[6][/*d*/ ctx[12].accent] || /*accent*/ ctx[8]));
     			}
 
     			if (dirty & /*nodes*/ 4) {
-    				set_style(div2, "opacity", /*d*/ ctx[13].opacity || 1);
+    				set_style(div2, "opacity", /*d*/ ctx[12].opacity || 1);
     			}
 
     			if (dirty & /*nodes*/ 4) {
-    				toggle_class(div2, "tiny", /*d*/ ctx[13].dy < 80);
+    				toggle_class(div2, "tiny", /*d*/ ctx[12].dy < 80);
     			}
     		},
     		d: function destroy(detaching) {
@@ -19464,24 +19466,24 @@ var app = (function () {
     		block,
     		id: create_each_block_1.name,
     		type: "each",
-    		source: "(58:4) {#each nodes as d}",
+    		source: "(57:4) {#each nodes as d}",
     		ctx
     	});
 
     	return block;
     }
 
-    // (79:6) {#each links as d}
+    // (78:6) {#each links as d}
     function create_each_block(ctx) {
     	let path_1;
     	let title;
-    	let t0_value = /*d*/ ctx[13].source.name + "";
+    	let t0_value = /*d*/ ctx[12].source.name + "";
     	let t0;
     	let t1;
-    	let t2_value = /*d*/ ctx[13].target.name + "";
+    	let t2_value = /*d*/ ctx[12].target.name + "";
     	let t2;
     	let t3;
-    	let t4_value = parseInt(/*d*/ ctx[13].value, 10) + "";
+    	let t4_value = parseInt(/*d*/ ctx[12].value, 10) + "";
     	let t4;
     	let path_1_d_value;
     	let path_1_stroke_width_value;
@@ -19495,13 +19497,13 @@ var app = (function () {
     			t2 = text(t2_value);
     			t3 = text(" $");
     			t4 = text(t4_value);
-    			add_location(title, file, 86, 10, 2070);
+    			add_location(title, file, 85, 10, 2047);
     			attr_dev(path_1, "class", "link svelte-sj91yl");
-    			attr_dev(path_1, "d", path_1_d_value = /*path*/ ctx[4](/*d*/ ctx[13]));
+    			attr_dev(path_1, "d", path_1_d_value = /*path*/ ctx[4](/*d*/ ctx[12]));
     			attr_dev(path_1, "stroke", "steelblue");
     			attr_dev(path_1, "fill", "none");
-    			attr_dev(path_1, "stroke-width", path_1_stroke_width_value = Math.max(1, /*d*/ ctx[13].dy));
-    			add_location(path_1, file, 79, 8, 1895);
+    			attr_dev(path_1, "stroke-width", path_1_stroke_width_value = Math.max(1, /*d*/ ctx[12].dy));
+    			add_location(path_1, file, 78, 8, 1872);
     		},
     		m: function mount(target, anchor) {
     			insert_dev(target, path_1, anchor);
@@ -19513,15 +19515,15 @@ var app = (function () {
     			append_dev(title, t4);
     		},
     		p: function update(ctx, dirty) {
-    			if (dirty & /*links*/ 8 && t0_value !== (t0_value = /*d*/ ctx[13].source.name + "")) set_data_dev(t0, t0_value);
-    			if (dirty & /*links*/ 8 && t2_value !== (t2_value = /*d*/ ctx[13].target.name + "")) set_data_dev(t2, t2_value);
-    			if (dirty & /*links*/ 8 && t4_value !== (t4_value = parseInt(/*d*/ ctx[13].value, 10) + "")) set_data_dev(t4, t4_value);
+    			if (dirty & /*links*/ 8 && t0_value !== (t0_value = /*d*/ ctx[12].source.name + "")) set_data_dev(t0, t0_value);
+    			if (dirty & /*links*/ 8 && t2_value !== (t2_value = /*d*/ ctx[12].target.name + "")) set_data_dev(t2, t2_value);
+    			if (dirty & /*links*/ 8 && t4_value !== (t4_value = parseInt(/*d*/ ctx[12].value, 10) + "")) set_data_dev(t4, t4_value);
 
-    			if (dirty & /*path, links*/ 24 && path_1_d_value !== (path_1_d_value = /*path*/ ctx[4](/*d*/ ctx[13]))) {
+    			if (dirty & /*path, links*/ 24 && path_1_d_value !== (path_1_d_value = /*path*/ ctx[4](/*d*/ ctx[12]))) {
     				attr_dev(path_1, "d", path_1_d_value);
     			}
 
-    			if (dirty & /*links*/ 8 && path_1_stroke_width_value !== (path_1_stroke_width_value = Math.max(1, /*d*/ ctx[13].dy))) {
+    			if (dirty & /*links*/ 8 && path_1_stroke_width_value !== (path_1_stroke_width_value = Math.max(1, /*d*/ ctx[12].dy))) {
     				attr_dev(path_1, "stroke-width", path_1_stroke_width_value);
     			}
     		},
@@ -19534,7 +19536,7 @@ var app = (function () {
     		block,
     		id: create_each_block.name,
     		type: "each",
-    		source: "(79:6) {#each links as d}",
+    		source: "(78:6) {#each links as d}",
     		ctx
     	});
 
@@ -19566,8 +19568,8 @@ var app = (function () {
     		each_blocks[i] = create_each_block(get_each_context(ctx, each_value, i));
     	}
 
-    	const default_slot_template = /*$$slots*/ ctx[12].default;
-    	const default_slot = create_slot(default_slot_template, ctx, /*$$scope*/ ctx[11], null);
+    	const default_slot_template = /*$$slots*/ ctx[11].default;
+    	const default_slot = create_slot(default_slot_template, ctx, /*$$scope*/ ctx[10], null);
 
     	const block = {
     		c: function create() {
@@ -19591,14 +19593,14 @@ var app = (function () {
     			set_style(div0, "position", "absolute");
     			set_style(div0, "width", /*width*/ ctx[0] + "px");
     			set_style(div0, "height", /*height*/ ctx[1] + "px");
-    			add_location(div0, file, 56, 2, 1140);
-    			add_location(g, file, 77, 4, 1858);
+    			add_location(div0, file, 55, 2, 1117);
+    			add_location(g, file, 76, 4, 1835);
     			attr_dev(svg, "viewBox", svg_viewBox_value = "0,0," + /*width*/ ctx[0] + "," + /*height*/ ctx[1]);
     			attr_dev(svg, "width", /*width*/ ctx[0]);
     			attr_dev(svg, "height", /*height*/ ctx[1]);
-    			add_location(svg, file, 76, 2, 1800);
+    			add_location(svg, file, 75, 2, 1777);
     			set_style(div1, "position", "relative");
-    			add_location(div1, file, 55, 0, 1105);
+    			add_location(div1, file, 54, 0, 1082);
     		},
     		l: function claim(nodes) {
     			throw new Error("options.hydrate only works if the component was compiled with the `hydratable: true` option");
@@ -19697,8 +19699,8 @@ var app = (function () {
     			}
 
     			if (default_slot) {
-    				if (default_slot.p && dirty & /*$$scope*/ 2048) {
-    					default_slot.p(get_slot_context(default_slot_template, ctx, /*$$scope*/ ctx[11], null), get_slot_changes(default_slot_template, /*$$scope*/ ctx[11], dirty, null));
+    				if (default_slot.p && dirty & /*$$scope*/ 1024) {
+    					default_slot.p(get_slot_context(default_slot_template, ctx, /*$$scope*/ ctx[10], null), get_slot_changes(default_slot_template, /*$$scope*/ ctx[10], dirty, null));
     				}
     			}
     		},
@@ -19734,9 +19736,8 @@ var app = (function () {
     function instance($$self, $$props, $$invalidate) {
     	let $items;
     	validate_store(items, "items");
-    	component_subscribe($$self, items, $$value => $$invalidate(10, $items = $$value));
+    	component_subscribe($$self, items, $$value => $$invalidate(9, $items = $$value));
     	let colors = spencerColor.colors;
-    	let { data = [] } = $$props;
     	let { width = 800 } = $$props;
     	let { height = 500 } = $$props;
 
@@ -19755,7 +19756,7 @@ var app = (function () {
     		$$invalidate(2, { nodes, links, path, nodeWidth } = build($items, width, height), nodes, $$invalidate(3, links), $$invalidate(4, path), $$invalidate(5, nodeWidth));
     	});
 
-    	const writable_props = ["data", "width", "height"];
+    	const writable_props = ["width", "height"];
 
     	Object.keys($$props).forEach(key => {
     		if (!~writable_props.indexOf(key) && key.slice(0, 2) !== "$$") console.warn(`<Sankey> was created with unknown prop '${key}'`);
@@ -19765,10 +19766,9 @@ var app = (function () {
     	validate_slots("Sankey", $$slots, ['default']);
 
     	$$self.$set = $$props => {
-    		if ("data" in $$props) $$invalidate(9, data = $$props.data);
     		if ("width" in $$props) $$invalidate(0, width = $$props.width);
     		if ("height" in $$props) $$invalidate(1, height = $$props.height);
-    		if ("$$scope" in $$props) $$invalidate(11, $$scope = $$props.$$scope);
+    		if ("$$scope" in $$props) $$invalidate(10, $$scope = $$props.$$scope);
     	};
 
     	$$self.$capture_state = () => ({
@@ -19777,7 +19777,6 @@ var app = (function () {
     		onMount,
     		c: spencerColor,
     		colors,
-    		data,
     		width,
     		height,
     		nodes,
@@ -19791,7 +19790,6 @@ var app = (function () {
 
     	$$self.$inject_state = $$props => {
     		if ("colors" in $$props) $$invalidate(6, colors = $$props.colors);
-    		if ("data" in $$props) $$invalidate(9, data = $$props.data);
     		if ("width" in $$props) $$invalidate(0, width = $$props.width);
     		if ("height" in $$props) $$invalidate(1, height = $$props.height);
     		if ("nodes" in $$props) $$invalidate(2, nodes = $$props.nodes);
@@ -19816,7 +19814,6 @@ var app = (function () {
     		colors,
     		color,
     		accent,
-    		data,
     		$items,
     		$$scope,
     		$$slots
@@ -19826,7 +19823,7 @@ var app = (function () {
     class Sankey extends SvelteComponentDev {
     	constructor(options) {
     		super(options);
-    		init(this, options, instance, create_fragment, safe_not_equal, { data: 9, width: 0, height: 1 });
+    		init(this, options, instance, create_fragment, safe_not_equal, { width: 0, height: 1 });
 
     		dispatch_dev("SvelteRegisterComponent", {
     			component: this,
@@ -19834,14 +19831,6 @@ var app = (function () {
     			options,
     			id: create_fragment.name
     		});
-    	}
-
-    	get data() {
-    		throw new Error("<Sankey>: Props cannot be read directly from the component instance unless compiling with 'accessors: true' or '<svelte:options accessors/>'");
-    	}
-
-    	set data(value) {
-    		throw new Error("<Sankey>: Props cannot be set directly on the component instance unless compiling with 'accessors: true' or '<svelte:options accessors/>'");
     	}
 
     	get width() {
@@ -20055,6 +20044,7 @@ var app = (function () {
     	let t9;
     	let t10;
     	let t11;
+    	let t12;
     	let current;
 
     	const node0 = new Node$2({
@@ -20067,6 +20057,7 @@ var app = (function () {
     				name: "Toronto",
     				to: "Ontario",
     				value: "6",
+    				color: "sky",
     				col: 0
     			},
     			$$inline: true
@@ -20077,6 +20068,7 @@ var app = (function () {
     				name: "Ottawa",
     				to: "Ontario",
     				value: "1",
+    				color: "sky",
     				col: 0
     			},
     			$$inline: true
@@ -20098,7 +20090,7 @@ var app = (function () {
     				name: "Montreal",
     				to: "Quebec",
     				value: "4",
-    				color: "orange",
+    				color: "mud",
     				col: 0
     			},
     			$$inline: true
@@ -20109,7 +20101,7 @@ var app = (function () {
     				name: "Quebec",
     				to: "Canada",
     				value: "8",
-    				color: "orange",
+    				color: "mud",
     				col: 1
     			},
     			$$inline: true
@@ -20120,7 +20112,7 @@ var app = (function () {
     				name: "Vancouver",
     				to: "B.C.",
     				value: "2.4",
-    				color: "greypurple",
+    				color: "burn",
     				col: 0
     			},
     			$$inline: true
@@ -20139,32 +20131,31 @@ var app = (function () {
 
     	const node8 = new Node$2({
     			props: {
-    				name: "Alberta",
-    				to: "Canada",
-    				value: "4",
-    				opacity: "0.6",
-    				col: 1
+    				name: "Calgary",
+    				to: "Alberta",
+    				value: "1.3",
+    				col: 0,
+    				color: "greygreen"
     			},
     			$$inline: true
     		});
 
     	const node9 = new Node$2({
     			props: {
-    				name: "Nova Scota",
+    				name: "Alberta",
     				to: "Canada",
-    				value: "1",
-    				opacity: "0.6",
-    				col: 1
+    				value: "4",
+    				col: 1,
+    				color: "greygreen"
     			},
     			$$inline: true
     		});
 
     	const node10 = new Node$2({
     			props: {
-    				name: "Manitoba",
+    				name: "Nova Scota",
     				to: "Canada",
     				value: "1",
-    				opacity: "0.6",
     				col: 1
     			},
     			$$inline: true
@@ -20172,10 +20163,9 @@ var app = (function () {
 
     	const node11 = new Node$2({
     			props: {
-    				name: "Saskatchewan",
+    				name: "Manitoba",
     				to: "Canada",
     				value: "1",
-    				opacity: "0.6",
     				col: 1
     			},
     			$$inline: true
@@ -20183,10 +20173,19 @@ var app = (function () {
 
     	const node12 = new Node$2({
     			props: {
+    				name: "Saskatchewan",
+    				to: "Canada",
+    				value: "1",
+    				col: 1
+    			},
+    			$$inline: true
+    		});
+
+    	const node13 = new Node$2({
+    			props: {
     				name: "rest",
     				to: "Canada",
     				value: 1,
-    				opacity: "0.6",
     				col: 1
     			},
     			$$inline: true
@@ -20219,6 +20218,8 @@ var app = (function () {
     			create_component(node11.$$.fragment);
     			t11 = space();
     			create_component(node12.$$.fragment);
+    			t12 = space();
+    			create_component(node13.$$.fragment);
     		},
     		m: function mount(target, anchor) {
     			mount_component(node0, target, anchor);
@@ -20246,6 +20247,8 @@ var app = (function () {
     			mount_component(node11, target, anchor);
     			insert_dev(target, t11, anchor);
     			mount_component(node12, target, anchor);
+    			insert_dev(target, t12, anchor);
+    			mount_component(node13, target, anchor);
     			current = true;
     		},
     		p: noop,
@@ -20264,6 +20267,7 @@ var app = (function () {
     			transition_in(node10.$$.fragment, local);
     			transition_in(node11.$$.fragment, local);
     			transition_in(node12.$$.fragment, local);
+    			transition_in(node13.$$.fragment, local);
     			current = true;
     		},
     		o: function outro(local) {
@@ -20280,6 +20284,7 @@ var app = (function () {
     			transition_out(node10.$$.fragment, local);
     			transition_out(node11.$$.fragment, local);
     			transition_out(node12.$$.fragment, local);
+    			transition_out(node13.$$.fragment, local);
     			current = false;
     		},
     		d: function destroy(detaching) {
@@ -20308,6 +20313,8 @@ var app = (function () {
     			destroy_component(node11, detaching);
     			if (detaching) detach_dev(t11);
     			destroy_component(node12, detaching);
+    			if (detaching) detach_dev(t12);
+    			destroy_component(node13, detaching);
     		}
     	};
 

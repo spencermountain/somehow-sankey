@@ -4,7 +4,6 @@
   import { onMount } from 'svelte'
   import c from 'spencer-color'
   let colors = c.colors
-  export let data = []
   export let width = 800
   export let height = 500
   let nodes = [],

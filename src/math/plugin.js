@@ -1,9 +1,6 @@
 const d3 = require('d3')
 const toPath = require('./toPath')
-
-function center(node) {
-  return node.y + node.dy / 2
-}
+const { nodeStartY, computeY } = require('./nodeLayout')
 
 function value(link) {
   return link.value
@@ -25,18 +22,6 @@ module.exports = function (width, height, nodeWidth) {
     return sankey
   }
 
-  // this is the main thing.
-  sankey.layout = function (ns, ls) {
-    nodes = ns
-    links = ls
-    computeNodeLinks()
-    computeNodeValues()
-    computeNodeX()
-    computeNodeY(1)
-    computeLinkDepths()
-    return sankey
-  }
-
   sankey.toPath = toPath
 
   // Populate the sourceLinks and targetLinks for each node.
@@ -47,10 +32,14 @@ module.exports = function (width, height, nodeWidth) {
       node.targetLinks = []
     })
     links.forEach(function (link) {
-      var source = link.source,
-        target = link.target
-      if (typeof source === 'number') source = link.source = nodes[link.source]
-      if (typeof target === 'number') target = link.target = nodes[link.target]
+      let source = link.source
+      let target = link.target
+      if (typeof source === 'number') {
+        source = link.source = nodes[link.source]
+      }
+      if (typeof target === 'number') {
+        target = link.target = nodes[link.target]
+      }
       source.sourceLinks.push(link)
       target.targetLinks.push(link)
     })
@@ -63,14 +52,6 @@ module.exports = function (width, height, nodeWidth) {
         d3.sum(node.sourceLinks, value),
         d3.sum(node.targetLinks, value)
       )
-    })
-  }
-
-  function moveSinksRight(x) {
-    nodes.forEach(function (node) {
-      if (!node.sourceLinks.length) {
-        node.x = x - 1
-      }
     })
   }
 
@@ -113,7 +94,7 @@ module.exports = function (width, height, nodeWidth) {
     scaleNodeBreadths((size[0] - nodeWidth) / (x - 1))
   }
 
-  function computeNodeY(iterations) {
+  function computeNodeY() {
     let nodesByCol = []
     nodes.forEach((node) => {
       let col = 0
@@ -126,66 +107,8 @@ module.exports = function (width, height, nodeWidth) {
     // make sure it never goes backwards
 
     //set y to byCol index
-    nodeStartY()
-    // resolveCollisions()
-    // for (var alpha = 1; iterations > 0; --iterations) {
-    // relaxRightToLeft((alpha *= 0.99))
-    // // resolveCollisions()
-    // relaxLeftToRight(alpha)
-    // }
-    // console.log(nodes)
-    computeY()
-
-    function nodeStartY() {
-      var ky = d3.min(nodesByCol, function (nodes) {
-        return (
-          (size[1] - (nodes.length - 1) * nodePadding) / d3.sum(nodes, value)
-        )
-      })
-
-      // set y to byCol index
-      nodesByCol.forEach(function (nodes) {
-        nodes.forEach(function (node, i) {
-          node.y = i
-          node.dy = node.value * ky
-        })
-      })
-
-      links.forEach(function (link) {
-        link.dy = link.value * ky
-      })
-    }
-
-    function computeY() {
-      nodesByCol.forEach(function (colNodes) {
-        var node,
-          dy,
-          y0 = 0,
-          n = colNodes.length,
-          i
-        // Push any overlapping nodes down.
-        for (i = 0; i < n; ++i) {
-          node = colNodes[i]
-
-          dy = y0 - node.y
-          if (dy > 0) {
-            node.y += dy
-          }
-          y0 = node.y + node.dy + nodePadding
-        }
-      })
-      nodesByCol.forEach(function (colNodes) {
-        colNodes.forEach((no) => {
-          if (no.sourceLinks[0]) {
-            let targetY = no.sourceLinks[0].target.y
-            if (targetY > no.y) {
-              // console.log(no.name, targetY)
-              no.y = targetY
-            }
-          }
-        })
-      })
-    }
+    nodeStartY(nodesByCol, links, size, nodePadding)
+    computeY(nodesByCol, nodePadding)
   }
 
   function computeLinkDepths() {
@@ -202,6 +125,16 @@ module.exports = function (width, height, nodeWidth) {
       })
     })
   }
-
+  // this is the main thing.
+  sankey.layout = function (ns, ls) {
+    nodes = ns
+    links = ls
+    computeNodeLinks()
+    computeNodeValues()
+    computeNodeX()
+    computeNodeY(1)
+    computeLinkDepths()
+    return sankey
+  }
   return sankey
 }
