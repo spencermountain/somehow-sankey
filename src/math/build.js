@@ -8,14 +8,13 @@ const onlyUnique = function (value, index, self) {
 }
 
 const build = function (data, width, height) {
-  let sanKey = d4.sankey().nodeWidth(150).nodePadding(50).size([width, height])
+  let sanKey = d4.sankey().nodeWidth(150).size([width, height])
 
-  let path = sanKey.link()
+  let path = sanKey.toPath()
   let meta = {}
   data.forEach((o) => {
     meta[o.source] = o
   })
-  // console.log(data)
 
   // create an array to push all sources and targets, before making them unique
   let arr = []
@@ -23,21 +22,14 @@ const build = function (data, width, height) {
     arr.push(d.source)
     arr.push(d.target)
   })
-  // arr = arr.filter((a) => a[1])
-  // console.log(arr)
   let nodes = arr.filter(onlyUnique).map(function (d, i) {
-    // console.log(d)
     return {
       node: i,
       name: d,
       meta: meta[d],
     }
   })
-  // nodes = nodes.filter((n) => n.name)
-  // console.log(nodes)
 
-  // nodes = nodes.filter((n) => n.name)
-  // console.log(data)
   // create links array
   let links = data.map(function (row) {
     function getNode(type) {
@@ -53,17 +45,13 @@ const build = function (data, width, height) {
       value: +row.value,
     }
   })
-  // links = links.filter((l) => l.target && l.target.name)
-  // console.log(links)
 
   sanKey.nodes(nodes).links(links).layout(32)
   nodes.forEach((n, i) => {
-    // let d = data.find((o) => o.name === n.name) || {}
-    // console.log(d)
     if (n.meta) {
       n.color = n.meta.color
-      // n.accent = d.accent
-      // n.opacity = d.opacity
+      n.opacity = n.meta.opacity
+      n.accent = n.meta.accent
     }
   })
   return {
