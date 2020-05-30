@@ -65,7 +65,7 @@ module.exports = function () {
   }
 
   sankey.link = function () {
-    var curvature = 0.5
+    var curvature = 0.4
 
     function link(d) {
       var x0 = d.source.x + d.source.dx,
@@ -232,7 +232,7 @@ module.exports = function () {
       })
 
       function weightedSource(link) {
-        return center(link.source) * link.value
+        return 0 //center(link.source) * link.value
       }
     }
 
@@ -252,6 +252,7 @@ module.exports = function () {
         })
 
       function weightedTarget(link) {
+        // console.log(link.target)
         return center(link.target) * link.value
       }
     }
