@@ -9,6 +9,7 @@
   let { nodes, links, path, nodeWidth } = build(data, width, height)
   items.subscribe(all => {
     ;({ nodes, links, path, nodeWidth } = build(all, width, height))
+    // console.log(nodes, links, path)
   })
   let color = 'steelblue'
   let accent = '#d98b89'
@@ -53,14 +54,14 @@
     {#each nodes as d}
       <div
         class="node"
-        class:tiny={d.y > 300}
+        class:tiny={d.dy < 80}
         style="left:{d.x}px; top:{d.y}px; width:{nodeWidth}px; background-color:{colors[d.color] || color};
         height:{d.dy < 0 ? 0.1 : d.dy}px; border-bottom: 4px solid {colors[d.accent] || accent};
         opacity:{d.opacity || 1};">
         <div class="label">{d.name}</div>
         <div
           class="value"
-          class:tiny={d.y > 300}
+          class:tiny={d.dy < 80}
           style="color:{colors[d.accent] || accent};">
           {Math.ceil(d.value * 100) / 100}m
         </div>

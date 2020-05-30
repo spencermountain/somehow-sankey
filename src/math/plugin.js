@@ -1,12 +1,21 @@
 let d3 = require('d3')
 
+function center(node) {
+  return node.y + node.dy / 2
+}
+
+function value(link) {
+  return link.value
+}
+
 module.exports = function () {
   var sankey = {},
     nodeWidth = 24,
     nodePadding = 8,
     size = [1, 1],
     nodes = [],
-    links = []
+    links = [],
+    meta = {}
 
   sankey.nodeWidth = function (_) {
     if (!arguments.length) return nodeWidth
@@ -23,6 +32,9 @@ module.exports = function () {
   sankey.nodes = function (_) {
     if (!arguments.length) return nodes
     nodes = _
+    nodes.forEach((o) => {
+      meta[o.name] = o
+    })
     return sankey
   }
 
@@ -271,17 +283,9 @@ module.exports = function () {
         }
       })
     }
-
-    function ascendingDepth(a, b) {
-      return a.y - b.y
-    }
   }
 
   function computeLinkDepths() {
-    nodes.forEach(function (node) {
-      // node.sourceLinks.sort(ascendingTargetDepth)
-      // node.targetLinks.sort(ascendingSourceDepth)
-    })
     nodes.forEach(function (node) {
       var sy = 0,
         ty = 0
@@ -294,22 +298,6 @@ module.exports = function () {
         ty += link.dy
       })
     })
-
-    function ascendingSourceDepth(a, b) {
-      return a.source.y - b.source.y
-    }
-
-    function ascendingTargetDepth(a, b) {
-      return a.target.y - b.target.y
-    }
-  }
-
-  function center(node) {
-    return node.y + node.dy / 2
-  }
-
-  function value(link) {
-    return link.value
   }
 
   return sankey

@@ -6,12 +6,14 @@
   export let color = 'steelblue'
   export let accent = '#d98b89'
   export let opacity = '1'
+  export let col = null
 
   let row = {
     source: name,
     target: to,
     value: value,
     color: color,
+    col: col,
     accent: accent,
     opacity: opacity,
   }
