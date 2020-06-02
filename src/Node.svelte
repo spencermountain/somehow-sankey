@@ -1,21 +1,20 @@
 <script>
-  import { items } from './store.js'
-  export let value = 1
+  import { getContext } from 'svelte'
+  import { items, colCount } from './lib/store.js'
+  export let value = null
   export let name = ''
   export let to = ''
   export let color = 'steelblue'
   export let accent = '#d98b89'
   export let opacity = '1'
-  export let col = null
-
   let row = {
-    source: name,
+    name: name,
     target: to,
     value: value,
     color: color,
-    col: col,
     accent: accent,
     opacity: opacity,
+    col: $colCount,
   }
 
   items.update(arr => {

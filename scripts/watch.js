@@ -13,7 +13,7 @@ const doit = function () {
 }
 
 const watcher = chokidar
-  .watch(`${abs}**/*.svelte`, {
+  .watch([`${abs}**/*.svelte`, `${abs}/src/**/*.js`], {
     ignored: [/node_modules/, /(^|[\/\\])\../],
     persistent: true,
   })

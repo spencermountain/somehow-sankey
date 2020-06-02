@@ -1,6 +1,6 @@
 <script>
-  import build from './math/build'
-  import { items } from './store.js'
+  import layout from './layout'
+  import { items } from './lib/store.js'
   import { onMount } from 'svelte'
   import c from 'spencer-color'
   let colors = c.colors
@@ -14,7 +14,7 @@
   let color = 'steelblue'
   let accent = '#d98b89'
   onMount(() => {
-    ;({ nodes, links, path, nodeWidth } = build($items, width, height))
+    ;({ nodes, links, path, nodeWidth } = layout($items, width, height))
   })
 </script>
 
@@ -32,6 +32,9 @@
     border-bottom: 4px solid #d98b89;
     font-size: 15px;
     font-family: 'Catamaran', sans-serif;
+  }
+  .stacked {
+    transform: translate(0, 20px);
   }
 
   .link {
@@ -58,8 +61,9 @@
       <div
         class="node"
         class:tiny={d.dy < 80}
-        style="left:{d.x}px; top:{d.y}px; width:{nodeWidth}px; background-color:{colors[d.color] || color};
-        height:{d.dy < 0 ? 0.1 : d.dy}px; border-bottom: 4px solid {colors[d.accent] || accent};
+        class:stacked={d.stacked}
+        style="left:{d.x}px; top:{d.y}px; width:{d.width}px; background-color:{colors[d.color] || color};
+        height:{d.height}px; border-bottom: 4px solid {colors[d.accent] || accent};
         opacity:{d.opacity || 1};">
         <div class="label">{d.name}</div>
         <div
@@ -75,7 +79,7 @@
 
   <svg viewBox="0,0,{width},{height}" {width} {height}>
     <g>
-      {#each links as d}
+      <!-- {#each links as d}
         <path
           class="link"
           d={path(d)}
@@ -87,7 +91,7 @@
             {d.source.name} → {d.target.name} ${parseInt(d.value, 10)}
           </title>
         </path>
-      {/each}
+      {/each} -->
     </g>
   </svg>
 </div>
