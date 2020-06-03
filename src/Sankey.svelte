@@ -6,15 +6,13 @@
   let colors = c.colors
   export let width = 800
   export let height = 500
-  let nodes = [],
-    links = [],
-    path = () => {},
-    nodeWidth = 1
-
+  let nodes = []
+  let paths = []
   let color = 'steelblue'
   let accent = '#d98b89'
   onMount(() => {
-    ;({ nodes, links, path, nodeWidth } = layout($items, width, height))
+    ;({ nodes, paths } = layout($items, width, height))
+    console.log(paths)
   })
 </script>
 
@@ -61,7 +59,6 @@
       <div
         class="node"
         class:tiny={d.dy < 80}
-        class:stacked={d.stacked}
         style="left:{d.x}px; top:{d.y}px; width:{d.width}px; background-color:{colors[d.color] || color};
         height:{d.height}px; border-bottom: 4px solid {colors[d.accent] || accent};
         opacity:{d.opacity || 1};">
@@ -79,19 +76,15 @@
 
   <svg viewBox="0,0,{width},{height}" {width} {height}>
     <g>
-      <!-- {#each links as d}
+      {#each paths as path}
         <path
           class="link"
-          d={path(d)}
+          d={path.d}
           stroke="steelblue"
-          fill="none"
+          fill="lightsteelblue"
           style=""
-          stroke-width={Math.max(1, d.dy)}>
-          <title>
-            {d.source.name} → {d.target.name} ${parseInt(d.value, 10)}
-          </title>
-        </path>
-      {/each} -->
+          stroke-width={1} />
+      {/each}
     </g>
   </svg>
 </div>

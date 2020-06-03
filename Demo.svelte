@@ -12,11 +12,15 @@
   <Col>
     <Node name="Ontario" to="Canada" value="14" color="sky" />
     <Node name="Quebec" to="Canada" value="8" color="mud" />
-
   </Col>
 
   <Col>
-    <Node name="Canada" color="red" />
+    <Node name="Canada" color="red" to="Germany" value="2" />
+    <Node name="Canada" color="red" to="Red" value="2" />
+  </Col>
+  <Col>
+    <Node name="Germany" color="purple" />
+    <Node name="Red" color="purple" />
   </Col>
 
 </Sankey>

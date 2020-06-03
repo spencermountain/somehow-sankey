@@ -2,6 +2,13 @@ import fmt from './00-fmt'
 import getHeights from './01-valueBySum'
 import getTop from './02-valueByTarget'
 import addXY from './03-addXY'
+import makePaths from './04-makePaths'
+
+const byStack = function (byCol) {
+  let stacks = []
+  byCol.forEach((nodes) => {})
+  return stacks
+}
 
 const toArr = function (byCol) {
   let nodes = []
@@ -18,11 +25,10 @@ const layout = function (items, width, height) {
   byCol = getTop(byCol)
   let nodes = toArr(byCol)
   nodes = addXY(nodes, Number(width), Number(height))
-  console.log(nodes)
+  let paths = makePaths(nodes)
   return {
     nodes,
-    links: [],
-    path: () => {},
+    paths: paths,
     nodeWidth: 50,
   }
 }
