@@ -4,9 +4,10 @@ const server = require('./server')
 const path = require('path')
 
 let abs = path.join(__dirname, '../')
-server(abs)
+// server(abs)
 
 const doit = function () {
+  console.log('\n')
   buildOne(abs).then(() => {
     console.log('\nready')
   })

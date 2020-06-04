@@ -1,34 +1,22 @@
-import fmt from './00-fmt'
-import getHeights from './01-valueBySum'
-import getTop from './02-valueByTarget'
-import addXY from './03-addXY'
-import makePaths from './04-makePaths'
+import fmtByCol from './01-byCol'
+import getValue from './02-getValues'
+import getTops from './03-getTops'
 
-const byStack = function (byCol) {
-  let stacks = []
-  byCol.forEach((nodes) => {})
-  return stacks
-}
-
-const toArr = function (byCol) {
-  let nodes = []
-  Object.keys(byCol).forEach((k) => {
-    nodes = nodes.concat(byCol[k])
-  })
-  return nodes
-}
-
-//   ;({ nodes, links, path, nodeWidth } = layout($items, width, height))
 const layout = function (items, width, height) {
-  let byCol = fmt(items)
-  byCol = getHeights(byCol)
-  byCol = getTop(byCol)
-  let nodes = toArr(byCol)
-  nodes = addXY(nodes, Number(width), Number(height))
-  let paths = makePaths(nodes)
+  let byCol = fmtByCol(items)
+  // calculate value by inputs
+  byCol = getValue(byCol)
+  byCol = getTops(byCol)
+  // console.log(JSON.stringify(byCol, null, 2))
+  console.log(byCol)
+  // byCol = getHeights(byCol)
+  // byCol = getTop(byCol)
+  // let nodes = toArr(byCol)
+  // nodes = addXY(nodes, Number(width), Number(height))
+  // let paths = makePaths(nodes)
   return {
-    nodes,
-    paths: paths,
+    nodes: [],
+    paths: [],
     nodeWidth: 50,
   }
 }

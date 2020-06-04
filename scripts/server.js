@@ -1,10 +1,10 @@
 var connect = require('connect')
 var statc = require('serve-static')
+var livereload = require('livereload')
 var server = connect()
 const port = 5000
 
 const startServer = function (abs) {
-  // console.log('server:')
   server.use(statc(abs))
 
   server.use(
@@ -16,8 +16,7 @@ const startServer = function (abs) {
   server.listen(port)
   console.log(`http://localhost:${port}`)
 
-  var livereload = require('livereload')
   var lrserver = livereload.createServer()
-  lrserver.watch(abs + '/**')
+  lrserver.watch(abs)
 }
 module.exports = startServer

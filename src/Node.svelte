@@ -9,8 +9,8 @@
   export let opacity = '1'
   let row = {
     name: name,
-    target: to,
-    value: value,
+    to: to,
+    value: Number(value),
     color: color,
     accent: accent,
     opacity: opacity,

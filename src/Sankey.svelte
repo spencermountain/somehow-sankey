@@ -12,7 +12,6 @@
   let accent = '#d98b89'
   onMount(() => {
     ;({ nodes, paths } = layout($items, width, height))
-    console.log(paths)
   })
 </script>
 

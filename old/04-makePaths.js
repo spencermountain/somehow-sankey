@@ -1,4 +1,4 @@
-const toPath = require('../lib/toPath')
+const toPath = require('../src/lib/toPath')
 
 const makePaths = function (nodes) {
   let paths = []

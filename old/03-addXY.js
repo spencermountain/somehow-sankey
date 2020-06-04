@@ -1,4 +1,4 @@
-const linear = require('../lib/scale')
+const linear = require('../src/lib/scale')
 const nodeWidth = 80
 
 const getMax = function (nodes) {

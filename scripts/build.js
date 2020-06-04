@@ -11,9 +11,9 @@ const buildPost = function (abs) {
       plugins: [
         svelte({
           dev: true,
-          css: (css) => {
-            css.write(`${abs}/build/bundle.css`, false)
-          },
+          // css: (css) => {
+          //   css.write(`${abs}/build/bundle.css`, false)
+          // },
         }),
         resolve({
           browser: true,
@@ -21,12 +21,6 @@ const buildPost = function (abs) {
         }),
         commonjs(),
       ],
-      onwarn: function (message) {
-        if (message.code === 'CIRCULAR_DEPENDENCY') {
-          return
-        }
-        console.error(message.message)
-      },
     })
     .then((bundle) => {
       bundle.write({

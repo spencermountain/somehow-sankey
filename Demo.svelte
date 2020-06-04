@@ -7,6 +7,7 @@
     <Node name="Toronto" to="Ontario" value="6" color="sky" />
     <Node name="Ottawa" to="Ontario" value="1" color="sky" />
     <Node name="Montreal" to="Quebec" value="4" color="mud" />
+    <Node name="Trois riviere" to="Quebec" value="4" color="mud" />
   </Col>
 
   <Col>
@@ -16,7 +17,6 @@
 
   <Col>
     <Node name="Canada" color="red" to="Germany" value="2" />
-    <Node name="Canada" color="red" to="Red" value="2" />
   </Col>
   <Col>
     <Node name="Germany" color="purple" />
