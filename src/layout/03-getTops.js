@@ -33,12 +33,43 @@ const byNeighbour = function (byCol) {
   return byCol
 }
 
+const getMax = function (byCol) {
+  let max = 0
+  byCol.forEach((nodes) => {
+    nodes.forEach((node) => {
+      let total = node.top + node.value
+      if (total > max) {
+        max = total
+      }
+    })
+  })
+  return max
+}
+
+// splay-out stacked nodes a bit
+const addMargin = function (byCol) {
+  let max = getMax(byCol)
+  let margin = max * 0.02
+  byCol.forEach((nodes) => {
+    let count = 1
+    nodes.forEach((node) => {
+      if (node.stacked) {
+        node.top += margin * count
+        count += 1
+      } else {
+        count = 1
+      }
+    })
+  })
+  return byCol
+}
+
 const findStart = function (byCol) {
   byCol = bySum(byCol)
   // wiggle-this out by right-neighbour
-  for (let i = 0; i < 3; i += 1) {
-    byCol = byNeighbour(byCol)
-  }
+  byCol = byNeighbour(byCol)
+  byCol = addMargin(byCol)
+  byCol = byNeighbour(byCol)
   return byCol
 }
 module.exports = findStart

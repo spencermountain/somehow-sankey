@@ -6,6 +6,8 @@
   let colors = c.colors
   export let width = 800
   export let height = 500
+  height = Number(height)
+  width = Number(width)
   let nodes = []
   let paths = []
   let color = 'steelblue'
@@ -31,10 +33,6 @@
     font-size: 15px;
     font-family: 'Catamaran', sans-serif;
   }
-  .stacked {
-    transform: translate(0, 20px);
-  }
-
   .link {
     opacity: 0.2;
   }
@@ -42,12 +40,11 @@
     stroke-opacity: 1;
   }
   .value {
-    color: #d98b89;
     font-size: 25px;
   }
   .tiny {
     flex-direction: row;
-    font-size: 12px;
+    font-size: 12px !important;
     justify-content: space-evenly;
   }
 </style>
@@ -64,7 +61,7 @@
         <div class="label">{d.name}</div>
         <div
           class="value"
-          class:tiny={d.dy < 80}
+          class:tiny={d.height < 80}
           style="color:{colors[d.accent] || accent};">
           {Math.ceil(d.value * 100) / 100}m
         </div>
@@ -74,17 +71,15 @@
   </div>
 
   <svg viewBox="0,0,{width},{height}" {width} {height}>
-    <g>
-      {#each paths as d}
-        <path
-          class="link"
-          {d}
-          stroke="steelblue"
-          fill="lightsteelblue"
-          style=""
-          stroke-width={1} />
-      {/each}
-    </g>
+    {#each paths as d}
+      <path
+        class="link"
+        {d}
+        stroke="none"
+        fill="lightsteelblue"
+        style=""
+        stroke-width={1} />
+    {/each}
   </svg>
 </div>
 
