@@ -6,7 +6,9 @@
 
   <Col>
     <Node name="Toronto" to="Greater Toronto" value="3" color="sky" />
+    <Node name="scarburough" to="Greater Toronto" value="0.6" color="sky" />
     <Node name="Montreal" to="Greater Montreal" value="1.7" color="mud" />
+    <Node name="Longueuil" to="Greater Montreal" value="2.2" color="mud" />
   </Col>
   <Col>
     <Node name="Greater Toronto" to="Ontario" value="6" color="sky" />
@@ -27,6 +29,6 @@
   </Col>
 
   <Col>
-    <Node name="Canada" color="red" />
+    <Node name="Canada" color="red" dy="20" />
   </Col>
 </Sankey>

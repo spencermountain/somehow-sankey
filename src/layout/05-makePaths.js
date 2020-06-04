@@ -7,7 +7,6 @@ const pinchUp = function (from, to) {
   // return ` S${from[0] + 50},${from[1] - 15}   ${to[0]},${to[1]}`
 }
 const makePaths = function (nodes) {
-  console.log(nodes)
   let paths = []
   nodes.forEach((node) => {
     let fromX = node.x + node.width

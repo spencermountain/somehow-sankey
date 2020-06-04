@@ -594,6 +594,7 @@ var app = (function () {
     var linear = getCjsExportFromNamespace(scale);
 
     const nodeWidth = 120;
+
     const getMax$1 = function (byCol) {
       let max = 0;
       byCol.forEach((nodes) => {
@@ -606,10 +607,18 @@ var app = (function () {
       });
       return max
     };
+
+    const applyDx = function (node) {
+      if (node.dx) {
+        node.x += node.dx;
+      }
+      if (node.dy) {
+        node.y += node.dy;
+      }
+      return node
+    };
+
     const makePoints = function (byCol, width, height) {
-      // let max = getMax(byCol)
-      // byCol = addMargin(byCol, max)
-      // recalc max
       let max = getMax$1(byCol);
       let yScale = linear({ minmax: [0, max], world: [0, height] });
       let xScale = linear({ minmax: [0, byCol.length], world: [0, width] });
@@ -620,6 +629,7 @@ var app = (function () {
           node.height = yScale(node.value);
           node.x = xScale(node.col);
           node.width = nodeWidth;
+          node = applyDx(node);
         });
       });
       return byCol
@@ -635,7 +645,6 @@ var app = (function () {
       // return ` S${from[0] + 50},${from[1] - 15}   ${to[0]},${to[1]}`
     };
     const makePaths = function (nodes) {
-      console.log(nodes);
       let paths = [];
       nodes.forEach((node) => {
         let fromX = node.x + node.width;
@@ -1236,18 +1245,22 @@ var app = (function () {
     function instance$1($$self, $$props, $$invalidate) {
     	let $colCount;
     	validate_store(colCount, "colCount");
-    	component_subscribe($$self, colCount, $$value => $$invalidate(6, $colCount = $$value));
+    	component_subscribe($$self, colCount, $$value => $$invalidate(8, $colCount = $$value));
     	let { value = null } = $$props;
     	let { name = "" } = $$props;
     	let { to = "" } = $$props;
     	let { color = "steelblue" } = $$props;
     	let { accent = "#d98b89" } = $$props;
+    	let { dy = "0" } = $$props;
+    	let { dx = "0" } = $$props;
     	let { opacity = "1" } = $$props;
 
     	let row = {
     		name,
     		to,
     		value: Number(value),
+    		dy: Number(dy),
+    		dx: Number(dx),
     		color,
     		accent,
     		opacity,
@@ -1259,7 +1272,7 @@ var app = (function () {
     		return arr;
     	});
 
-    	const writable_props = ["value", "name", "to", "color", "accent", "opacity"];
+    	const writable_props = ["value", "name", "to", "color", "accent", "dy", "dx", "opacity"];
 
     	Object.keys($$props).forEach(key => {
     		if (!~writable_props.indexOf(key) && key.slice(0, 2) !== "$$") console.warn(`<Node> was created with unknown prop '${key}'`);
@@ -1274,7 +1287,9 @@ var app = (function () {
     		if ("to" in $$props) $$invalidate(2, to = $$props.to);
     		if ("color" in $$props) $$invalidate(3, color = $$props.color);
     		if ("accent" in $$props) $$invalidate(4, accent = $$props.accent);
-    		if ("opacity" in $$props) $$invalidate(5, opacity = $$props.opacity);
+    		if ("dy" in $$props) $$invalidate(5, dy = $$props.dy);
+    		if ("dx" in $$props) $$invalidate(6, dx = $$props.dx);
+    		if ("opacity" in $$props) $$invalidate(7, opacity = $$props.opacity);
     	};
 
     	$$self.$capture_state = () => ({
@@ -1286,6 +1301,8 @@ var app = (function () {
     		to,
     		color,
     		accent,
+    		dy,
+    		dx,
     		opacity,
     		row,
     		$colCount
@@ -1297,7 +1314,9 @@ var app = (function () {
     		if ("to" in $$props) $$invalidate(2, to = $$props.to);
     		if ("color" in $$props) $$invalidate(3, color = $$props.color);
     		if ("accent" in $$props) $$invalidate(4, accent = $$props.accent);
-    		if ("opacity" in $$props) $$invalidate(5, opacity = $$props.opacity);
+    		if ("dy" in $$props) $$invalidate(5, dy = $$props.dy);
+    		if ("dx" in $$props) $$invalidate(6, dx = $$props.dx);
+    		if ("opacity" in $$props) $$invalidate(7, opacity = $$props.opacity);
     		if ("row" in $$props) row = $$props.row;
     	};
 
@@ -1305,7 +1324,7 @@ var app = (function () {
     		$$self.$inject_state($$props.$$inject);
     	}
 
-    	return [value, name, to, color, accent, opacity];
+    	return [value, name, to, color, accent, dy, dx, opacity];
     }
 
     class Node extends SvelteComponentDev {
@@ -1318,7 +1337,9 @@ var app = (function () {
     			to: 2,
     			color: 3,
     			accent: 4,
-    			opacity: 5
+    			dy: 5,
+    			dx: 6,
+    			opacity: 7
     		});
 
     		dispatch_dev("SvelteRegisterComponent", {
@@ -1366,6 +1387,22 @@ var app = (function () {
     	}
 
     	set accent(value) {
+    		throw new Error("<Node>: Props cannot be set directly on the component instance unless compiling with 'accessors: true' or '<svelte:options accessors/>'");
+    	}
+
+    	get dy() {
+    		throw new Error("<Node>: Props cannot be read directly from the component instance unless compiling with 'accessors: true' or '<svelte:options accessors/>'");
+    	}
+
+    	set dy(value) {
+    		throw new Error("<Node>: Props cannot be set directly on the component instance unless compiling with 'accessors: true' or '<svelte:options accessors/>'");
+    	}
+
+    	get dx() {
+    		throw new Error("<Node>: Props cannot be read directly from the component instance unless compiling with 'accessors: true' or '<svelte:options accessors/>'");
+    	}
+
+    	set dx(value) {
     		throw new Error("<Node>: Props cannot be set directly on the component instance unless compiling with 'accessors: true' or '<svelte:options accessors/>'");
     	}
 
@@ -1494,7 +1531,9 @@ var app = (function () {
 
     // (7:2) <Col>
     function create_default_slot_4(ctx) {
-    	let t;
+    	let t0;
+    	let t1;
+    	let t2;
     	let current;
 
     	const node0 = new Node({
@@ -1509,6 +1548,16 @@ var app = (function () {
 
     	const node1 = new Node({
     			props: {
+    				name: "scarburough",
+    				to: "Greater Toronto",
+    				value: "0.6",
+    				color: "sky"
+    			},
+    			$$inline: true
+    		});
+
+    	const node2 = new Node({
+    			props: {
     				name: "Montreal",
     				to: "Greater Montreal",
     				value: "1.7",
@@ -1517,16 +1566,34 @@ var app = (function () {
     			$$inline: true
     		});
 
+    	const node3 = new Node({
+    			props: {
+    				name: "Longueuil",
+    				to: "Greater Montreal",
+    				value: "2.2",
+    				color: "mud"
+    			},
+    			$$inline: true
+    		});
+
     	const block = {
     		c: function create() {
     			create_component(node0.$$.fragment);
-    			t = space();
+    			t0 = space();
     			create_component(node1.$$.fragment);
+    			t1 = space();
+    			create_component(node2.$$.fragment);
+    			t2 = space();
+    			create_component(node3.$$.fragment);
     		},
     		m: function mount(target, anchor) {
     			mount_component(node0, target, anchor);
-    			insert_dev(target, t, anchor);
+    			insert_dev(target, t0, anchor);
     			mount_component(node1, target, anchor);
+    			insert_dev(target, t1, anchor);
+    			mount_component(node2, target, anchor);
+    			insert_dev(target, t2, anchor);
+    			mount_component(node3, target, anchor);
     			current = true;
     		},
     		p: noop,
@@ -1534,17 +1601,25 @@ var app = (function () {
     			if (current) return;
     			transition_in(node0.$$.fragment, local);
     			transition_in(node1.$$.fragment, local);
+    			transition_in(node2.$$.fragment, local);
+    			transition_in(node3.$$.fragment, local);
     			current = true;
     		},
     		o: function outro(local) {
     			transition_out(node0.$$.fragment, local);
     			transition_out(node1.$$.fragment, local);
+    			transition_out(node2.$$.fragment, local);
+    			transition_out(node3.$$.fragment, local);
     			current = false;
     		},
     		d: function destroy(detaching) {
     			destroy_component(node0, detaching);
-    			if (detaching) detach_dev(t);
+    			if (detaching) detach_dev(t0);
     			destroy_component(node1, detaching);
+    			if (detaching) detach_dev(t1);
+    			destroy_component(node2, detaching);
+    			if (detaching) detach_dev(t2);
+    			destroy_component(node3, detaching);
     		}
     	};
 
@@ -1559,7 +1634,7 @@ var app = (function () {
     	return block;
     }
 
-    // (11:2) <Col>
+    // (13:2) <Col>
     function create_default_slot_3(ctx) {
     	let t0;
     	let t1;
@@ -1676,14 +1751,14 @@ var app = (function () {
     		block,
     		id: create_default_slot_3.name,
     		type: "slot",
-    		source: "(11:2) <Col>",
+    		source: "(13:2) <Col>",
     		ctx
     	});
 
     	return block;
     }
 
-    // (18:2) <Col>
+    // (20:2) <Col>
     function create_default_slot_2(ctx) {
     	let t0;
     	let t1;
@@ -1861,19 +1936,19 @@ var app = (function () {
     		block,
     		id: create_default_slot_2.name,
     		type: "slot",
-    		source: "(18:2) <Col>",
+    		source: "(20:2) <Col>",
     		ctx
     	});
 
     	return block;
     }
 
-    // (29:2) <Col>
+    // (31:2) <Col>
     function create_default_slot_1(ctx) {
     	let current;
 
     	const node = new Node({
-    			props: { name: "Canada", color: "red" },
+    			props: { name: "Canada", color: "red", dy: "20" },
     			$$inline: true
     		});
 
@@ -1904,7 +1979,7 @@ var app = (function () {
     		block,
     		id: create_default_slot_1.name,
     		type: "slot",
-    		source: "(29:2) <Col>",
+    		source: "(31:2) <Col>",
     		ctx
     	});
 

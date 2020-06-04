@@ -6,11 +6,15 @@
   export let to = ''
   export let color = 'steelblue'
   export let accent = '#d98b89'
+  export let dy = '0'
+  export let dx = '0'
   export let opacity = '1'
   let row = {
     name: name,
     to: to,
     value: Number(value),
+    dy: Number(dy),
+    dx: Number(dx),
     color: color,
     accent: accent,
     opacity: opacity,
