@@ -12,6 +12,7 @@
   let accent = '#d98b89'
   onMount(() => {
     ;({ nodes, paths } = layout($items, width, height))
+    // console.log(paths)
   })
 </script>
 
@@ -35,8 +36,7 @@
   }
 
   .link {
-    fill: none;
-    stroke-opacity: 0.2;
+    opacity: 0.2;
   }
   .link:hover {
     stroke-opacity: 1;
@@ -57,7 +57,7 @@
     {#each nodes as d}
       <div
         class="node"
-        class:tiny={d.dy < 80}
+        class:tiny={d.height < 80}
         style="left:{d.x}px; top:{d.y}px; width:{d.width}px; background-color:{colors[d.color] || color};
         height:{d.height}px; border-bottom: 4px solid {colors[d.accent] || accent};
         opacity:{d.opacity || 1};">
@@ -75,10 +75,10 @@
 
   <svg viewBox="0,0,{width},{height}" {width} {height}>
     <g>
-      {#each paths as path}
+      {#each paths as d}
         <path
           class="link"
-          d={path.d}
+          {d}
           stroke="steelblue"
           fill="lightsteelblue"
           style=""

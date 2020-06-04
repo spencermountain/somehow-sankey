@@ -1,22 +1,36 @@
 import fmtByCol from './01-byCol'
 import getValue from './02-getValues'
 import getTops from './03-getTops'
+import makePoints from './04-makePoints'
+import makePaths from './05-makePaths'
+
+let toFlat = function (byCol) {
+  let list = []
+  byCol.forEach((nodes) => {
+    nodes.forEach((node) => {
+      list.push(node)
+    })
+  })
+  // remove empty nodes
+  list = list.filter((n) => n.value)
+  return list
+}
 
 const layout = function (items, width, height) {
   let byCol = fmtByCol(items)
-  // calculate value by inputs
+  // add value
   byCol = getValue(byCol)
+  // add top
   byCol = getTops(byCol)
-  // console.log(JSON.stringify(byCol, null, 2))
-  console.log(byCol)
-  // byCol = getHeights(byCol)
-  // byCol = getTop(byCol)
-  // let nodes = toArr(byCol)
-  // nodes = addXY(nodes, Number(width), Number(height))
-  // let paths = makePaths(nodes)
+  // add x, y, width, height
+  byCol = makePoints(byCol, width, height)
+
+  let nodes = toFlat(byCol)
+  let paths = makePaths(nodes)
+
   return {
-    nodes: [],
-    paths: [],
+    nodes: nodes,
+    paths: paths,
     nodeWidth: 50,
   }
 }

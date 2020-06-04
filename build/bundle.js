@@ -489,7 +489,8 @@ var app = (function () {
       return byCol
     };
 
-    const byTos = function (byCol) {
+    // align each node with right-node
+    const byNeighbour = function (byCol) {
       byCol.forEach((nodes) => {
         nodes.forEach((node, n) => {
           if (node.tos.length === 1 && node.tos[0].top > node.top) {
@@ -509,7 +510,6 @@ var app = (function () {
           }
         });
       });
-
       return byCol
     };
 
@@ -517,27 +517,163 @@ var app = (function () {
       byCol = bySum(byCol);
       // wiggle-this out by right-neighbour
       for (let i = 0; i < 3; i += 1) {
-        byCol = byTos(byCol);
+        byCol = byNeighbour(byCol);
       }
       return byCol
     };
     var _03GetTops = findStart;
 
+    //a very-tiny version of d3-scale's scaleLinear
+    const scaleLinear = function (obj) {
+      let world = obj.world || [];
+      let minmax = obj.minmax || obj.minMax || [];
+      const calc = (num) => {
+        let range = minmax[1] - minmax[0];
+        let percent = (num - minmax[0]) / range;
+        let size = world[1] - world[0];
+        return parseInt(size * percent, 10)
+      };
+
+      return calc
+    };
+
+    // let scale = scaleLinear({
+    //   world: [0, 300],
+    //   minmax: [0, 100]
+    // })
+    // console.log(scale(50))
+
+    var scale = /*#__PURE__*/Object.freeze({
+        __proto__: null,
+        'default': scaleLinear
+    });
+
+    function createCommonjsModule(fn, module) {
+    	return module = { exports: {} }, fn(module, module.exports), module.exports;
+    }
+
+    function getCjsExportFromNamespace (n) {
+    	return n && n['default'] || n;
+    }
+
+    function commonjsRequire () {
+    	throw new Error('Dynamic requires are not currently supported by @rollup/plugin-commonjs');
+    }
+
+    var linear = getCjsExportFromNamespace(scale);
+
+    const nodeWidth = 80;
+
+    const getMax = function (byCol) {
+      let max = 0;
+      byCol.forEach((nodes) => {
+        nodes.forEach((node) => {
+          let total = node.top + node.value;
+          if (total > max) {
+            max = total;
+          }
+        });
+      });
+      return max
+    };
+
+    // splay-out stacked nodes a bit
+    const addMargin = function (byCol, max) {
+      let margin = max * 0.02;
+      byCol.forEach((nodes) => {
+        let count = 1;
+        nodes.forEach((node) => {
+          if (node.stacked) {
+            node.top += margin * count;
+            count += 1;
+          } else {
+            count = 1;
+          }
+        });
+      });
+      return byCol
+    };
+
+    const makePoints = function (byCol, width, height) {
+      let max = getMax(byCol);
+      byCol = addMargin(byCol, max);
+      let yScale = linear({ minmax: [0, max], world: [0, width] });
+      let xScale = linear({ minmax: [0, byCol.length], world: [0, height] });
+      byCol.forEach((nodes) => {
+        nodes.forEach((node) => {
+          node.y = yScale(node.top);
+          node.height = yScale(node.value);
+          node.x = xScale(node.col);
+          node.width = nodeWidth;
+        });
+      });
+      return byCol
+    };
+    var _04MakePoints = makePoints;
+
+    const pinchDown = function (from, to) {
+      return ` L${to[0]},${to[1]}`
+      // return ` S${from[0] + 50},${from[1] + 15}   ${to[0]},${to[1]}`
+    };
+    const pinchUp = function (from, to) {
+      return ` L${to[0]},${to[1]}`
+      // return ` S${from[0] + 50},${from[1] - 15}   ${to[0]},${to[1]}`
+    };
+    const makePaths = function (nodes) {
+      console.log(nodes);
+      let paths = [];
+      nodes.forEach((node) => {
+        let fromX = node.x + node.width;
+        let fromY = node.y;
+        let h = node.height;
+        node.tos.forEach((to) => {
+          to.already = to.already || 0;
+          // node top-right
+          let d = `M${fromX},${fromY}`;
+          // dest top-left
+          d += pinchDown([fromX, fromY], [to.x, to.y + to.already]);
+          // dest bottom-left
+          d += ` L${to.x},${to.y + h + to.already}`;
+          // back to bottom of node
+          d += pinchUp([to.x, to.y + h + to.already], [fromX, fromY + h]);
+          // fill it
+          d += ` Z`;
+          to.already += node.height;
+
+          paths.push(d);
+        });
+      });
+      return paths
+    };
+    var _05MakePaths = makePaths;
+
+    let toFlat = function (byCol) {
+      let list = [];
+      byCol.forEach((nodes) => {
+        nodes.forEach((node) => {
+          list.push(node);
+        });
+      });
+      // remove empty nodes
+      list = list.filter((n) => n.value);
+      return list
+    };
+
     const layout = function (items, width, height) {
       let byCol = fmt(items);
-      // calculate value by inputs
+      // add value
       byCol = getValues(byCol);
+      // add top
       byCol = _03GetTops(byCol);
-      // console.log(JSON.stringify(byCol, null, 2))
-      console.log(byCol);
-      // byCol = getHeights(byCol)
-      // byCol = getTop(byCol)
-      // let nodes = toArr(byCol)
-      // nodes = addXY(nodes, Number(width), Number(height))
-      // let paths = makePaths(nodes)
+      // add x, y, width, height
+      byCol = _04MakePoints(byCol, width, height);
+
+      let nodes = toFlat(byCol);
+      let paths = _05MakePaths(nodes);
+
       return {
-        nodes: [],
-        paths: [],
+        nodes: nodes,
+        paths: paths,
         nodeWidth: 50,
       }
     };
@@ -597,14 +733,6 @@ var app = (function () {
     const items = writable([]);
     let colCount = writable(0);
 
-    function createCommonjsModule(fn, module) {
-    	return module = { exports: {} }, fn(module, module.exports), module.exports;
-    }
-
-    function commonjsRequire () {
-    	throw new Error('Dynamic requires are not currently supported by @rollup/plugin-commonjs');
-    }
-
     var spencerColor = createCommonjsModule(function (module, exports) {
     !function(e){module.exports=e();}(function(){return function u(i,a,c){function f(r,e){if(!a[r]){if(!i[r]){var o="function"==typeof commonjsRequire&&commonjsRequire;if(!e&&o)return o(r,!0);if(d)return d(r,!0);var n=new Error("Cannot find module '"+r+"'");throw n.code="MODULE_NOT_FOUND",n}var t=a[r]={exports:{}};i[r][0].call(t.exports,function(e){return f(i[r][1][e]||e)},t,t.exports,u,i,a,c);}return a[r].exports}for(var d="function"==typeof commonjsRequire&&commonjsRequire,e=0;e<c.length;e++)f(c[e]);return f}({1:[function(e,r,o){r.exports={blue:"#6699cc",green:"#6accb2",yellow:"#e1e6b3",red:"#cc7066",pink:"#F2C0BB",brown:"#705E5C",orange:"#cc8a66",purple:"#d8b3e6",navy:"#335799",olive:"#7f9c6c",fuscia:"#735873",beige:"#e6d7b3",slate:"#8C8C88",suede:"#9c896c",burnt:"#603a39",sea:"#50617A",sky:"#2D85A8",night:"#303b50",rouge:"#914045",grey:"#838B91",mud:"#C4ABAB",royal:"#275291",cherry:"#cc6966",tulip:"#e6b3bc",rose:"#D68881",fire:"#AB5850",greyblue:"#72697D",greygreen:"#8BA3A2",greypurple:"#978BA3",burn:"#6D5685",slategrey:"#bfb0b3",light:"#a3a5a5",lighter:"#d7d5d2",fudge:"#4d4d4d",lightgrey:"#949a9e",white:"#fbfbfb",dimgrey:"#606c74",softblack:"#463D4F",dark:"#443d3d",black:"#333333"};},{}],2:[function(e,r,o){var n=e("./colors"),t={juno:["blue","mud","navy","slate","pink","burn"],barrow:["rouge","red","orange","burnt","brown","greygreen"],roma:["#8a849a","#b5b0bf","rose","lighter","greygreen","mud"],palmer:["red","navy","olive","pink","suede","sky"],mark:["#848f9a","#9aa4ac","slate","#b0b8bf","mud","grey"],salmon:["sky","sea","fuscia","slate","mud","fudge"],dupont:["green","brown","orange","red","olive","blue"],bloor:["night","navy","beige","rouge","mud","grey"],yukon:["mud","slate","brown","sky","beige","red"],david:["blue","green","yellow","red","pink","light"],neste:["mud","cherry","royal","rouge","greygreen","greypurple"],ken:["red","sky","#c67a53","greygreen","#dfb59f","mud"]};Object.keys(t).forEach(function(e){t[e]=t[e].map(function(e){return n[e]||e});}),r.exports=t;},{"./colors":1}],3:[function(e,r,o){var n=e("./colors"),t=e("./combos"),u={colors:n,list:Object.keys(n).map(function(e){return n[e]}),combos:t};r.exports=u;},{"./colors":1,"./combos":2}]},{},[3])(3)});
     });
@@ -614,8 +742,8 @@ var app = (function () {
 
     function add_css() {
     	var style = element("style");
-    	style.id = "svelte-1w8euv4-style";
-    	style.textContent = ".node.svelte-1w8euv4{position:absolute;border-radius:3px;box-shadow:2px 2px 8px 0px rgba(0, 0, 0, 0.2);color:#dedede;text-align:center;display:flex;flex-direction:column;align-items:center;justify-content:center;border-bottom:4px solid #d98b89;font-size:15px;font-family:'Catamaran', sans-serif}.link.svelte-1w8euv4{fill:none;stroke-opacity:0.2}.link.svelte-1w8euv4:hover{stroke-opacity:1}.value.svelte-1w8euv4{color:#d98b89;font-size:25px}.tiny.svelte-1w8euv4{flex-direction:row;font-size:12px;justify-content:space-evenly}\n/*# sourceMappingURL=data:application/json;charset=utf-8;base64,eyJ2ZXJzaW9uIjozLCJmaWxlIjoiU2Fua2V5LnN2ZWx0ZSIsInNvdXJjZXMiOlsiU2Fua2V5LnN2ZWx0ZSJdLCJzb3VyY2VzQ29udGVudCI6WyI8c2NyaXB0PlxuICBpbXBvcnQgbGF5b3V0IGZyb20gJy4vbGF5b3V0J1xuICBpbXBvcnQgeyBpdGVtcyB9IGZyb20gJy4vbGliL3N0b3JlLmpzJ1xuICBpbXBvcnQgeyBvbk1vdW50IH0gZnJvbSAnc3ZlbHRlJ1xuICBpbXBvcnQgYyBmcm9tICdzcGVuY2VyLWNvbG9yJ1xuICBsZXQgY29sb3JzID0gYy5jb2xvcnNcbiAgZXhwb3J0IGxldCB3aWR0aCA9IDgwMFxuICBleHBvcnQgbGV0IGhlaWdodCA9IDUwMFxuICBsZXQgbm9kZXMgPSBbXVxuICBsZXQgcGF0aHMgPSBbXVxuICBsZXQgY29sb3IgPSAnc3RlZWxibHVlJ1xuICBsZXQgYWNjZW50ID0gJyNkOThiODknXG4gIG9uTW91bnQoKCkgPT4ge1xuICAgIDsoeyBub2RlcywgcGF0aHMgfSA9IGxheW91dCgkaXRlbXMsIHdpZHRoLCBoZWlnaHQpKVxuICB9KVxuPC9zY3JpcHQ+XG5cbjxzdHlsZT5cbiAgLm5vZGUge1xuICAgIHBvc2l0aW9uOiBhYnNvbHV0ZTtcbiAgICBib3JkZXItcmFkaXVzOiAzcHg7XG4gICAgYm94LXNoYWRvdzogMnB4IDJweCA4cHggMHB4IHJnYmEoMCwgMCwgMCwgMC4yKTtcbiAgICBjb2xvcjogI2RlZGVkZTtcbiAgICB0ZXh0LWFsaWduOiBjZW50ZXI7XG4gICAgZGlzcGxheTogZmxleDtcbiAgICBmbGV4LWRpcmVjdGlvbjogY29sdW1uO1xuICAgIGFsaWduLWl0ZW1zOiBjZW50ZXI7XG4gICAganVzdGlmeS1jb250ZW50OiBjZW50ZXI7XG4gICAgYm9yZGVyLWJvdHRvbTogNHB4IHNvbGlkICNkOThiODk7XG4gICAgZm9udC1zaXplOiAxNXB4O1xuICAgIGZvbnQtZmFtaWx5OiAnQ2F0YW1hcmFuJywgc2Fucy1zZXJpZjtcbiAgfVxuICAuc3RhY2tlZCB7XG4gICAgdHJhbnNmb3JtOiB0cmFuc2xhdGUoMCwgMjBweCk7XG4gIH1cblxuICAubGluayB7XG4gICAgZmlsbDogbm9uZTtcbiAgICBzdHJva2Utb3BhY2l0eTogMC4yO1xuICB9XG4gIC5saW5rOmhvdmVyIHtcbiAgICBzdHJva2Utb3BhY2l0eTogMTtcbiAgfVxuICAudmFsdWUge1xuICAgIGNvbG9yOiAjZDk4Yjg5O1xuICAgIGZvbnQtc2l6ZTogMjVweDtcbiAgfVxuICAudGlueSB7XG4gICAgZmxleC1kaXJlY3Rpb246IHJvdztcbiAgICBmb250LXNpemU6IDEycHg7XG4gICAganVzdGlmeS1jb250ZW50OiBzcGFjZS1ldmVubHk7XG4gIH1cbjwvc3R5bGU+XG5cbjxkaXYgc3R5bGU9XCJwb3NpdGlvbjpyZWxhdGl2ZTtcIj5cbiAgPGRpdiBzdHlsZT1cInBvc2l0aW9uOmFic29sdXRlOyB3aWR0aDp7d2lkdGh9cHg7IGhlaWdodDp7aGVpZ2h0fXB4O1wiPlxuICAgIHsjZWFjaCBub2RlcyBhcyBkfVxuICAgICAgPGRpdlxuICAgICAgICBjbGFzcz1cIm5vZGVcIlxuICAgICAgICBjbGFzczp0aW55PXtkLmR5IDwgODB9XG4gICAgICAgIHN0eWxlPVwibGVmdDp7ZC54fXB4OyB0b3A6e2QueX1weDsgd2lkdGg6e2Qud2lkdGh9cHg7IGJhY2tncm91bmQtY29sb3I6e2NvbG9yc1tkLmNvbG9yXSB8fCBjb2xvcn07XG4gICAgICAgIGhlaWdodDp7ZC5oZWlnaHR9cHg7IGJvcmRlci1ib3R0b206IDRweCBzb2xpZCB7Y29sb3JzW2QuYWNjZW50XSB8fCBhY2NlbnR9O1xuICAgICAgICBvcGFjaXR5OntkLm9wYWNpdHkgfHwgMX07XCI+XG4gICAgICAgIDxkaXYgY2xhc3M9XCJsYWJlbFwiPntkLm5hbWV9PC9kaXY+XG4gICAgICAgIDxkaXZcbiAgICAgICAgICBjbGFzcz1cInZhbHVlXCJcbiAgICAgICAgICBjbGFzczp0aW55PXtkLmR5IDwgODB9XG4gICAgICAgICAgc3R5bGU9XCJjb2xvcjp7Y29sb3JzW2QuYWNjZW50XSB8fCBhY2NlbnR9O1wiPlxuICAgICAgICAgIHtNYXRoLmNlaWwoZC52YWx1ZSAqIDEwMCkgLyAxMDB9bVxuICAgICAgICA8L2Rpdj5cbiAgICAgIDwvZGl2PlxuICAgIHsvZWFjaH1cblxuICA8L2Rpdj5cblxuICA8c3ZnIHZpZXdCb3g9XCIwLDAse3dpZHRofSx7aGVpZ2h0fVwiIHt3aWR0aH0ge2hlaWdodH0+XG4gICAgPGc+XG4gICAgICB7I2VhY2ggcGF0aHMgYXMgcGF0aH1cbiAgICAgICAgPHBhdGhcbiAgICAgICAgICBjbGFzcz1cImxpbmtcIlxuICAgICAgICAgIGQ9e3BhdGguZH1cbiAgICAgICAgICBzdHJva2U9XCJzdGVlbGJsdWVcIlxuICAgICAgICAgIGZpbGw9XCJsaWdodHN0ZWVsYmx1ZVwiXG4gICAgICAgICAgc3R5bGU9XCJcIlxuICAgICAgICAgIHN0cm9rZS13aWR0aD17MX0gLz5cbiAgICAgIHsvZWFjaH1cbiAgICA8L2c+XG4gIDwvc3ZnPlxuPC9kaXY+XG5cbjxzbG90IC8+XG4iXSwibmFtZXMiOltdLCJtYXBwaW5ncyI6IkFBa0JFLEtBQUssZUFBQyxDQUFDLEFBQ0wsUUFBUSxDQUFFLFFBQVEsQ0FDbEIsYUFBYSxDQUFFLEdBQUcsQ0FDbEIsVUFBVSxDQUFFLEdBQUcsQ0FBQyxHQUFHLENBQUMsR0FBRyxDQUFDLEdBQUcsQ0FBQyxLQUFLLENBQUMsQ0FBQyxDQUFDLENBQUMsQ0FBQyxDQUFDLENBQUMsQ0FBQyxDQUFDLEdBQUcsQ0FBQyxDQUM5QyxLQUFLLENBQUUsT0FBTyxDQUNkLFVBQVUsQ0FBRSxNQUFNLENBQ2xCLE9BQU8sQ0FBRSxJQUFJLENBQ2IsY0FBYyxDQUFFLE1BQU0sQ0FDdEIsV0FBVyxDQUFFLE1BQU0sQ0FDbkIsZUFBZSxDQUFFLE1BQU0sQ0FDdkIsYUFBYSxDQUFFLEdBQUcsQ0FBQyxLQUFLLENBQUMsT0FBTyxDQUNoQyxTQUFTLENBQUUsSUFBSSxDQUNmLFdBQVcsQ0FBRSxXQUFXLENBQUMsQ0FBQyxVQUFVLEFBQ3RDLENBQUMsQUFLRCxLQUFLLGVBQUMsQ0FBQyxBQUNMLElBQUksQ0FBRSxJQUFJLENBQ1YsY0FBYyxDQUFFLEdBQUcsQUFDckIsQ0FBQyxBQUNELG9CQUFLLE1BQU0sQUFBQyxDQUFDLEFBQ1gsY0FBYyxDQUFFLENBQUMsQUFDbkIsQ0FBQyxBQUNELE1BQU0sZUFBQyxDQUFDLEFBQ04sS0FBSyxDQUFFLE9BQU8sQ0FDZCxTQUFTLENBQUUsSUFBSSxBQUNqQixDQUFDLEFBQ0QsS0FBSyxlQUFDLENBQUMsQUFDTCxjQUFjLENBQUUsR0FBRyxDQUNuQixTQUFTLENBQUUsSUFBSSxDQUNmLGVBQWUsQ0FBRSxZQUFZLEFBQy9CLENBQUMifQ== */";
+    	style.id = "svelte-vp4vmn-style";
+    	style.textContent = ".node.svelte-vp4vmn{position:absolute;border-radius:3px;box-shadow:2px 2px 8px 0px rgba(0, 0, 0, 0.2);color:#dedede;text-align:center;display:flex;flex-direction:column;align-items:center;justify-content:center;border-bottom:4px solid #d98b89;font-size:15px;font-family:'Catamaran', sans-serif}.link.svelte-vp4vmn{opacity:0.2}.link.svelte-vp4vmn:hover{stroke-opacity:1}.value.svelte-vp4vmn{color:#d98b89;font-size:25px}.tiny.svelte-vp4vmn{flex-direction:row;font-size:12px;justify-content:space-evenly}\n/*# sourceMappingURL=data:application/json;charset=utf-8;base64,eyJ2ZXJzaW9uIjozLCJmaWxlIjoiU2Fua2V5LnN2ZWx0ZSIsInNvdXJjZXMiOlsiU2Fua2V5LnN2ZWx0ZSJdLCJzb3VyY2VzQ29udGVudCI6WyI8c2NyaXB0PlxuICBpbXBvcnQgbGF5b3V0IGZyb20gJy4vbGF5b3V0J1xuICBpbXBvcnQgeyBpdGVtcyB9IGZyb20gJy4vbGliL3N0b3JlLmpzJ1xuICBpbXBvcnQgeyBvbk1vdW50IH0gZnJvbSAnc3ZlbHRlJ1xuICBpbXBvcnQgYyBmcm9tICdzcGVuY2VyLWNvbG9yJ1xuICBsZXQgY29sb3JzID0gYy5jb2xvcnNcbiAgZXhwb3J0IGxldCB3aWR0aCA9IDgwMFxuICBleHBvcnQgbGV0IGhlaWdodCA9IDUwMFxuICBsZXQgbm9kZXMgPSBbXVxuICBsZXQgcGF0aHMgPSBbXVxuICBsZXQgY29sb3IgPSAnc3RlZWxibHVlJ1xuICBsZXQgYWNjZW50ID0gJyNkOThiODknXG4gIG9uTW91bnQoKCkgPT4ge1xuICAgIDsoeyBub2RlcywgcGF0aHMgfSA9IGxheW91dCgkaXRlbXMsIHdpZHRoLCBoZWlnaHQpKVxuICAgIC8vIGNvbnNvbGUubG9nKHBhdGhzKVxuICB9KVxuPC9zY3JpcHQ+XG5cbjxzdHlsZT5cbiAgLm5vZGUge1xuICAgIHBvc2l0aW9uOiBhYnNvbHV0ZTtcbiAgICBib3JkZXItcmFkaXVzOiAzcHg7XG4gICAgYm94LXNoYWRvdzogMnB4IDJweCA4cHggMHB4IHJnYmEoMCwgMCwgMCwgMC4yKTtcbiAgICBjb2xvcjogI2RlZGVkZTtcbiAgICB0ZXh0LWFsaWduOiBjZW50ZXI7XG4gICAgZGlzcGxheTogZmxleDtcbiAgICBmbGV4LWRpcmVjdGlvbjogY29sdW1uO1xuICAgIGFsaWduLWl0ZW1zOiBjZW50ZXI7XG4gICAganVzdGlmeS1jb250ZW50OiBjZW50ZXI7XG4gICAgYm9yZGVyLWJvdHRvbTogNHB4IHNvbGlkICNkOThiODk7XG4gICAgZm9udC1zaXplOiAxNXB4O1xuICAgIGZvbnQtZmFtaWx5OiAnQ2F0YW1hcmFuJywgc2Fucy1zZXJpZjtcbiAgfVxuICAuc3RhY2tlZCB7XG4gICAgdHJhbnNmb3JtOiB0cmFuc2xhdGUoMCwgMjBweCk7XG4gIH1cblxuICAubGluayB7XG4gICAgb3BhY2l0eTogMC4yO1xuICB9XG4gIC5saW5rOmhvdmVyIHtcbiAgICBzdHJva2Utb3BhY2l0eTogMTtcbiAgfVxuICAudmFsdWUge1xuICAgIGNvbG9yOiAjZDk4Yjg5O1xuICAgIGZvbnQtc2l6ZTogMjVweDtcbiAgfVxuICAudGlueSB7XG4gICAgZmxleC1kaXJlY3Rpb246IHJvdztcbiAgICBmb250LXNpemU6IDEycHg7XG4gICAganVzdGlmeS1jb250ZW50OiBzcGFjZS1ldmVubHk7XG4gIH1cbjwvc3R5bGU+XG5cbjxkaXYgc3R5bGU9XCJwb3NpdGlvbjpyZWxhdGl2ZTtcIj5cbiAgPGRpdiBzdHlsZT1cInBvc2l0aW9uOmFic29sdXRlOyB3aWR0aDp7d2lkdGh9cHg7IGhlaWdodDp7aGVpZ2h0fXB4O1wiPlxuICAgIHsjZWFjaCBub2RlcyBhcyBkfVxuICAgICAgPGRpdlxuICAgICAgICBjbGFzcz1cIm5vZGVcIlxuICAgICAgICBjbGFzczp0aW55PXtkLmhlaWdodCA8IDgwfVxuICAgICAgICBzdHlsZT1cImxlZnQ6e2QueH1weDsgdG9wOntkLnl9cHg7IHdpZHRoOntkLndpZHRofXB4OyBiYWNrZ3JvdW5kLWNvbG9yOntjb2xvcnNbZC5jb2xvcl0gfHwgY29sb3J9O1xuICAgICAgICBoZWlnaHQ6e2QuaGVpZ2h0fXB4OyBib3JkZXItYm90dG9tOiA0cHggc29saWQge2NvbG9yc1tkLmFjY2VudF0gfHwgYWNjZW50fTtcbiAgICAgICAgb3BhY2l0eTp7ZC5vcGFjaXR5IHx8IDF9O1wiPlxuICAgICAgICA8ZGl2IGNsYXNzPVwibGFiZWxcIj57ZC5uYW1lfTwvZGl2PlxuICAgICAgICA8ZGl2XG4gICAgICAgICAgY2xhc3M9XCJ2YWx1ZVwiXG4gICAgICAgICAgY2xhc3M6dGlueT17ZC5keSA8IDgwfVxuICAgICAgICAgIHN0eWxlPVwiY29sb3I6e2NvbG9yc1tkLmFjY2VudF0gfHwgYWNjZW50fTtcIj5cbiAgICAgICAgICB7TWF0aC5jZWlsKGQudmFsdWUgKiAxMDApIC8gMTAwfW1cbiAgICAgICAgPC9kaXY+XG4gICAgICA8L2Rpdj5cbiAgICB7L2VhY2h9XG5cbiAgPC9kaXY+XG5cbiAgPHN2ZyB2aWV3Qm94PVwiMCwwLHt3aWR0aH0se2hlaWdodH1cIiB7d2lkdGh9IHtoZWlnaHR9PlxuICAgIDxnPlxuICAgICAgeyNlYWNoIHBhdGhzIGFzIGR9XG4gICAgICAgIDxwYXRoXG4gICAgICAgICAgY2xhc3M9XCJsaW5rXCJcbiAgICAgICAgICB7ZH1cbiAgICAgICAgICBzdHJva2U9XCJzdGVlbGJsdWVcIlxuICAgICAgICAgIGZpbGw9XCJsaWdodHN0ZWVsYmx1ZVwiXG4gICAgICAgICAgc3R5bGU9XCJcIlxuICAgICAgICAgIHN0cm9rZS13aWR0aD17MX0gLz5cbiAgICAgIHsvZWFjaH1cbiAgICA8L2c+XG4gIDwvc3ZnPlxuPC9kaXY+XG5cbjxzbG90IC8+XG4iXSwibmFtZXMiOltdLCJtYXBwaW5ncyI6IkFBbUJFLEtBQUssY0FBQyxDQUFDLEFBQ0wsUUFBUSxDQUFFLFFBQVEsQ0FDbEIsYUFBYSxDQUFFLEdBQUcsQ0FDbEIsVUFBVSxDQUFFLEdBQUcsQ0FBQyxHQUFHLENBQUMsR0FBRyxDQUFDLEdBQUcsQ0FBQyxLQUFLLENBQUMsQ0FBQyxDQUFDLENBQUMsQ0FBQyxDQUFDLENBQUMsQ0FBQyxDQUFDLEdBQUcsQ0FBQyxDQUM5QyxLQUFLLENBQUUsT0FBTyxDQUNkLFVBQVUsQ0FBRSxNQUFNLENBQ2xCLE9BQU8sQ0FBRSxJQUFJLENBQ2IsY0FBYyxDQUFFLE1BQU0sQ0FDdEIsV0FBVyxDQUFFLE1BQU0sQ0FDbkIsZUFBZSxDQUFFLE1BQU0sQ0FDdkIsYUFBYSxDQUFFLEdBQUcsQ0FBQyxLQUFLLENBQUMsT0FBTyxDQUNoQyxTQUFTLENBQUUsSUFBSSxDQUNmLFdBQVcsQ0FBRSxXQUFXLENBQUMsQ0FBQyxVQUFVLEFBQ3RDLENBQUMsQUFLRCxLQUFLLGNBQUMsQ0FBQyxBQUNMLE9BQU8sQ0FBRSxHQUFHLEFBQ2QsQ0FBQyxBQUNELG1CQUFLLE1BQU0sQUFBQyxDQUFDLEFBQ1gsY0FBYyxDQUFFLENBQUMsQUFDbkIsQ0FBQyxBQUNELE1BQU0sY0FBQyxDQUFDLEFBQ04sS0FBSyxDQUFFLE9BQU8sQ0FDZCxTQUFTLENBQUUsSUFBSSxBQUNqQixDQUFDLEFBQ0QsS0FBSyxjQUFDLENBQUMsQUFDTCxjQUFjLENBQUUsR0FBRyxDQUNuQixTQUFTLENBQUUsSUFBSSxDQUNmLGVBQWUsQ0FBRSxZQUFZLEFBQy9CLENBQUMifQ== */";
     	append_dev(document.head, style);
     }
 
@@ -627,7 +755,7 @@ var app = (function () {
 
     function get_each_context_1(ctx, list, i) {
     	const child_ctx = ctx.slice();
-    	child_ctx[13] = list[i];
+    	child_ctx[10] = list[i];
     	return child_ctx;
     }
 
@@ -635,11 +763,11 @@ var app = (function () {
     function create_each_block_1(ctx) {
     	let div2;
     	let div0;
-    	let t0_value = /*d*/ ctx[13].name + "";
+    	let t0_value = /*d*/ ctx[10].name + "";
     	let t0;
     	let t1;
     	let div1;
-    	let t2_value = Math.ceil(/*d*/ ctx[13].value * 100) / 100 + "";
+    	let t2_value = Math.ceil(/*d*/ ctx[10].value * 100) / 100 + "";
     	let t2;
     	let t3;
     	let t4;
@@ -655,21 +783,21 @@ var app = (function () {
     			t3 = text("m");
     			t4 = space();
     			attr_dev(div0, "class", "label");
-    			add_location(div0, file, 63, 8, 1503);
-    			attr_dev(div1, "class", "value svelte-1w8euv4");
-    			set_style(div1, "color", /*colors*/ ctx[4][/*d*/ ctx[13].accent] || /*accent*/ ctx[6]);
-    			toggle_class(div1, "tiny", /*d*/ ctx[13].dy < 80);
-    			add_location(div1, file, 64, 8, 1545);
-    			attr_dev(div2, "class", "node svelte-1w8euv4");
-    			set_style(div2, "left", /*d*/ ctx[13].x + "px");
-    			set_style(div2, "top", /*d*/ ctx[13].y + "px");
-    			set_style(div2, "width", /*d*/ ctx[13].width + "px");
-    			set_style(div2, "background-color", /*colors*/ ctx[4][/*d*/ ctx[13].color] || /*color*/ ctx[5]);
-    			set_style(div2, "height", /*d*/ ctx[13].height + "px");
-    			set_style(div2, "border-bottom", "4px solid " + (/*colors*/ ctx[4][/*d*/ ctx[13].accent] || /*accent*/ ctx[6]));
-    			set_style(div2, "opacity", /*d*/ ctx[13].opacity || 1);
-    			toggle_class(div2, "tiny", /*d*/ ctx[13].dy < 80);
-    			add_location(div2, file, 57, 6, 1212);
+    			add_location(div0, file, 63, 8, 1510);
+    			attr_dev(div1, "class", "value svelte-vp4vmn");
+    			set_style(div1, "color", /*colors*/ ctx[4][/*d*/ ctx[10].accent] || /*accent*/ ctx[6]);
+    			toggle_class(div1, "tiny", /*d*/ ctx[10].dy < 80);
+    			add_location(div1, file, 64, 8, 1552);
+    			attr_dev(div2, "class", "node svelte-vp4vmn");
+    			set_style(div2, "left", /*d*/ ctx[10].x + "px");
+    			set_style(div2, "top", /*d*/ ctx[10].y + "px");
+    			set_style(div2, "width", /*d*/ ctx[10].width + "px");
+    			set_style(div2, "background-color", /*colors*/ ctx[4][/*d*/ ctx[10].color] || /*color*/ ctx[5]);
+    			set_style(div2, "height", /*d*/ ctx[10].height + "px");
+    			set_style(div2, "border-bottom", "4px solid " + (/*colors*/ ctx[4][/*d*/ ctx[10].accent] || /*accent*/ ctx[6]));
+    			set_style(div2, "opacity", /*d*/ ctx[10].opacity || 1);
+    			toggle_class(div2, "tiny", /*d*/ ctx[10].height < 80);
+    			add_location(div2, file, 57, 6, 1215);
     		},
     		m: function mount(target, anchor) {
     			insert_dev(target, div2, anchor);
@@ -682,47 +810,47 @@ var app = (function () {
     			append_dev(div2, t4);
     		},
     		p: function update(ctx, dirty) {
-    			if (dirty & /*nodes*/ 4 && t0_value !== (t0_value = /*d*/ ctx[13].name + "")) set_data_dev(t0, t0_value);
-    			if (dirty & /*nodes*/ 4 && t2_value !== (t2_value = Math.ceil(/*d*/ ctx[13].value * 100) / 100 + "")) set_data_dev(t2, t2_value);
+    			if (dirty & /*nodes*/ 4 && t0_value !== (t0_value = /*d*/ ctx[10].name + "")) set_data_dev(t0, t0_value);
+    			if (dirty & /*nodes*/ 4 && t2_value !== (t2_value = Math.ceil(/*d*/ ctx[10].value * 100) / 100 + "")) set_data_dev(t2, t2_value);
 
     			if (dirty & /*nodes*/ 4) {
-    				set_style(div1, "color", /*colors*/ ctx[4][/*d*/ ctx[13].accent] || /*accent*/ ctx[6]);
+    				set_style(div1, "color", /*colors*/ ctx[4][/*d*/ ctx[10].accent] || /*accent*/ ctx[6]);
     			}
 
     			if (dirty & /*nodes*/ 4) {
-    				toggle_class(div1, "tiny", /*d*/ ctx[13].dy < 80);
+    				toggle_class(div1, "tiny", /*d*/ ctx[10].dy < 80);
     			}
 
     			if (dirty & /*nodes*/ 4) {
-    				set_style(div2, "left", /*d*/ ctx[13].x + "px");
+    				set_style(div2, "left", /*d*/ ctx[10].x + "px");
     			}
 
     			if (dirty & /*nodes*/ 4) {
-    				set_style(div2, "top", /*d*/ ctx[13].y + "px");
+    				set_style(div2, "top", /*d*/ ctx[10].y + "px");
     			}
 
     			if (dirty & /*nodes*/ 4) {
-    				set_style(div2, "width", /*d*/ ctx[13].width + "px");
+    				set_style(div2, "width", /*d*/ ctx[10].width + "px");
     			}
 
     			if (dirty & /*nodes*/ 4) {
-    				set_style(div2, "background-color", /*colors*/ ctx[4][/*d*/ ctx[13].color] || /*color*/ ctx[5]);
+    				set_style(div2, "background-color", /*colors*/ ctx[4][/*d*/ ctx[10].color] || /*color*/ ctx[5]);
     			}
 
     			if (dirty & /*nodes*/ 4) {
-    				set_style(div2, "height", /*d*/ ctx[13].height + "px");
+    				set_style(div2, "height", /*d*/ ctx[10].height + "px");
     			}
 
     			if (dirty & /*nodes*/ 4) {
-    				set_style(div2, "border-bottom", "4px solid " + (/*colors*/ ctx[4][/*d*/ ctx[13].accent] || /*accent*/ ctx[6]));
+    				set_style(div2, "border-bottom", "4px solid " + (/*colors*/ ctx[4][/*d*/ ctx[10].accent] || /*accent*/ ctx[6]));
     			}
 
     			if (dirty & /*nodes*/ 4) {
-    				set_style(div2, "opacity", /*d*/ ctx[13].opacity || 1);
+    				set_style(div2, "opacity", /*d*/ ctx[10].opacity || 1);
     			}
 
     			if (dirty & /*nodes*/ 4) {
-    				toggle_class(div2, "tiny", /*d*/ ctx[13].dy < 80);
+    				toggle_class(div2, "tiny", /*d*/ ctx[10].height < 80);
     			}
     		},
     		d: function destroy(detaching) {
@@ -741,7 +869,7 @@ var app = (function () {
     	return block;
     }
 
-    // (78:6) {#each paths as path}
+    // (78:6) {#each paths as d}
     function create_each_block(ctx) {
     	let path;
     	let path_d_value;
@@ -750,18 +878,18 @@ var app = (function () {
     	const block = {
     		c: function create() {
     			path = svg_element("path");
-    			attr_dev(path, "class", "link svelte-1w8euv4");
-    			attr_dev(path, "d", path_d_value = /*path*/ ctx[10].d);
+    			attr_dev(path, "class", "link svelte-vp4vmn");
+    			attr_dev(path, "d", path_d_value = /*d*/ ctx[10]);
     			attr_dev(path, "stroke", "steelblue");
     			attr_dev(path, "fill", "lightsteelblue");
     			attr_dev(path, "stroke-width", path_stroke_width_value = 1);
-    			add_location(path, file, 78, 8, 1857);
+    			add_location(path, file, 78, 8, 1861);
     		},
     		m: function mount(target, anchor) {
     			insert_dev(target, path, anchor);
     		},
     		p: function update(ctx, dirty) {
-    			if (dirty & /*paths*/ 8 && path_d_value !== (path_d_value = /*path*/ ctx[10].d)) {
+    			if (dirty & /*paths*/ 8 && path_d_value !== (path_d_value = /*d*/ ctx[10])) {
     				attr_dev(path, "d", path_d_value);
     			}
     		},
@@ -774,7 +902,7 @@ var app = (function () {
     		block,
     		id: create_each_block.name,
     		type: "each",
-    		source: "(78:6) {#each paths as path}",
+    		source: "(78:6) {#each paths as d}",
     		ctx
     	});
 
@@ -831,14 +959,14 @@ var app = (function () {
     			set_style(div0, "position", "absolute");
     			set_style(div0, "width", /*width*/ ctx[0] + "px");
     			set_style(div0, "height", /*height*/ ctx[1] + "px");
-    			add_location(div0, file, 55, 2, 1114);
-    			add_location(g, file, 76, 4, 1817);
+    			add_location(div0, file, 55, 2, 1117);
+    			add_location(g, file, 76, 4, 1824);
     			attr_dev(svg, "viewBox", svg_viewBox_value = "0,0," + /*width*/ ctx[0] + "," + /*height*/ ctx[1]);
     			attr_dev(svg, "width", /*width*/ ctx[0]);
     			attr_dev(svg, "height", /*height*/ ctx[1]);
-    			add_location(svg, file, 75, 2, 1759);
+    			add_location(svg, file, 75, 2, 1766);
     			set_style(div1, "position", "relative");
-    			add_location(div1, file, 54, 0, 1079);
+    			add_location(div1, file, 54, 0, 1082);
     		},
     		l: function claim(nodes) {
     			throw new Error("options.hydrate only works if the component was compiled with the `hydratable: true` option");
@@ -985,8 +1113,8 @@ var app = (function () {
 
     	onMount(() => {
     		
-    		$$invalidate(2, { nodes, paths } = layout($items), nodes, $$invalidate(3, paths));
-    	});
+    		$$invalidate(2, { nodes, paths } = layout($items, width, height), nodes, $$invalidate(3, paths));
+    	}); // console.log(paths)
 
     	const writable_props = ["width", "height"];
 
@@ -1038,7 +1166,7 @@ var app = (function () {
     class Sankey extends SvelteComponentDev {
     	constructor(options) {
     		super(options);
-    		if (!document.getElementById("svelte-1w8euv4-style")) add_css();
+    		if (!document.getElementById("svelte-vp4vmn-style")) add_css();
     		init(this, options, instance, create_fragment, safe_not_equal, { width: 0, height: 1 });
 
     		dispatch_dev("SvelteRegisterComponent", {

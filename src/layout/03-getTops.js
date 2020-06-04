@@ -9,7 +9,8 @@ const bySum = function (byCol) {
   return byCol
 }
 
-const byTos = function (byCol) {
+// align each node with right-node
+const byNeighbour = function (byCol) {
   byCol.forEach((nodes) => {
     nodes.forEach((node, n) => {
       if (node.tos.length === 1 && node.tos[0].top > node.top) {
@@ -29,7 +30,6 @@ const byTos = function (byCol) {
       }
     })
   })
-
   return byCol
 }
 
@@ -37,7 +37,7 @@ const findStart = function (byCol) {
   byCol = bySum(byCol)
   // wiggle-this out by right-neighbour
   for (let i = 0; i < 3; i += 1) {
-    byCol = byTos(byCol)
+    byCol = byNeighbour(byCol)
   }
   return byCol
 }

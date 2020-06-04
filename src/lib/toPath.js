@@ -11,6 +11,8 @@ module.exports = function (source, target) {
   let xi = d3.interpolateNumber(x0, x1)
   let x2 = xi(curvature)
   let x3 = xi(1 - curvature)
+  // x0, y0
+  //
   return (
     'M' +
     x0 +
