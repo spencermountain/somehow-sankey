@@ -14,7 +14,7 @@ const byNeighbour = function (byCol) {
   byCol.forEach((nodes) => {
     nodes.forEach((node, n) => {
       if (node.tos.length === 1 && node.tos[0].top > node.top) {
-        // console.log('moving ' + node.name)
+        console.log('moving ' + node.name)
         node.top = node.tos[0].top
         // move down stacked-nodes as well
         let already = node.top + node.value
@@ -49,7 +49,7 @@ const getMax = function (byCol) {
 // splay-out stacked nodes a bit
 const addMargin = function (byCol) {
   let max = getMax(byCol)
-  let margin = max * 0.02
+  let margin = max * 0.01
   byCol.forEach((nodes) => {
     let count = 1
     nodes.forEach((node) => {

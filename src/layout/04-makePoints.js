@@ -1,5 +1,4 @@
 const linear = require('../lib/scale')
-const nodeWidth = 120
 
 const getMax = function (byCol) {
   let max = 0
@@ -24,11 +23,10 @@ const applyDx = function (node) {
   return node
 }
 
-const makePoints = function (byCol, width, height) {
+const makePoints = function (byCol, width, height, nodeWidth) {
   let max = getMax(byCol)
   let yScale = linear({ minmax: [0, max], world: [0, height] })
   let xScale = linear({ minmax: [0, byCol.length], world: [0, width] })
-  console.log(max, height)
   byCol.forEach((nodes) => {
     nodes.forEach((node) => {
       node.y = yScale(node.top)

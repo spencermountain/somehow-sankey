@@ -9,6 +9,9 @@
   export let dy = '0'
   export let dx = '0'
   export let opacity = '1'
+  if (typeof value === 'string') {
+    value = value.replace(/,/g, '')
+  }
   let row = {
     name: name,
     to: to,

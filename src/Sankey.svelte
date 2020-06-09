@@ -6,6 +6,17 @@
   let colors = c.colors
   export let width = 800
   export let height = 500
+  export let nodeWidth = 120
+  export let fmt = num => {
+    if (num >= 1000000) {
+      num = Math.round(num / 1000000) * 1000000
+      return String(num / 1000000) + 'm'
+    }
+    if (num > 1000) {
+      return String(num / 1000) + 'k'
+    }
+    return String(num)
+  }
   height = Number(height)
   width = Number(width)
   let nodes = []
@@ -13,7 +24,7 @@
   let color = 'steelblue'
   let accent = '#d98b89'
   onMount(() => {
-    ;({ nodes, paths } = layout($items, width, height))
+    ;({ nodes, paths } = layout($items, width, height, nodeWidth))
     // console.log(paths)
   })
 </script>
@@ -63,7 +74,7 @@
           class="value"
           class:tiny={d.height < 80}
           style="color:{colors[d.accent] || accent};">
-          {Math.ceil(d.value * 100) / 100}m
+          {fmt(d.value)}
         </div>
       </div>
     {/each}

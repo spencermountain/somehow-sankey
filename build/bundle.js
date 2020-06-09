@@ -494,7 +494,7 @@ var app = (function () {
       byCol.forEach((nodes) => {
         nodes.forEach((node, n) => {
           if (node.tos.length === 1 && node.tos[0].top > node.top) {
-            // console.log('moving ' + node.name)
+            console.log('moving ' + node.name);
             node.top = node.tos[0].top;
             // move down stacked-nodes as well
             let already = node.top + node.value;
@@ -529,7 +529,7 @@ var app = (function () {
     // splay-out stacked nodes a bit
     const addMargin = function (byCol) {
       let max = getMax(byCol);
-      let margin = max * 0.02;
+      let margin = max * 0.01;
       byCol.forEach((nodes) => {
         let count = 1;
         nodes.forEach((node) => {
@@ -593,8 +593,6 @@ var app = (function () {
 
     var linear = getCjsExportFromNamespace(scale);
 
-    const nodeWidth = 120;
-
     const getMax$1 = function (byCol) {
       let max = 0;
       byCol.forEach((nodes) => {
@@ -618,11 +616,10 @@ var app = (function () {
       return node
     };
 
-    const makePoints = function (byCol, width, height) {
+    const makePoints = function (byCol, width, height, nodeWidth) {
       let max = getMax$1(byCol);
       let yScale = linear({ minmax: [0, max], world: [0, height] });
       let xScale = linear({ minmax: [0, byCol.length], world: [0, width] });
-      console.log(max, height);
       byCol.forEach((nodes) => {
         nodes.forEach((node) => {
           node.y = yScale(node.top);
@@ -683,14 +680,14 @@ var app = (function () {
       return list
     };
 
-    const layout = function (items, width, height) {
+    const layout = function (items, width, height, nodeWidth) {
       let byCol = fmt(items);
       // add value
       byCol = getValues(byCol);
       // add top
       byCol = _03GetTops(byCol);
       // add x, y, width, height
-      byCol = _04MakePoints(byCol, width, height);
+      byCol = _04MakePoints(byCol, width, height, nodeWidth);
 
       let nodes = toFlat(byCol);
       let paths = _05MakePaths(nodes);
@@ -698,7 +695,7 @@ var app = (function () {
       return {
         nodes: nodes,
         paths: paths,
-        nodeWidth: 50,
+        nodeWidth: nodeWidth,
       }
     };
 
@@ -767,34 +764,33 @@ var app = (function () {
     function add_css() {
     	var style = element("style");
     	style.id = "svelte-1v79r3e-style";
-    	style.textContent = ".node.svelte-1v79r3e{position:absolute;border-radius:3px;box-shadow:2px 2px 8px 0px rgba(0, 0, 0, 0.2);color:#dedede;text-align:center;display:flex;flex-direction:column;align-items:center;justify-content:center;border-bottom:4px solid #d98b89;font-size:15px;font-family:'Catamaran', sans-serif}.link.svelte-1v79r3e{opacity:0.2}.link.svelte-1v79r3e:hover{stroke-opacity:1}.value.svelte-1v79r3e{font-size:25px}.tiny.svelte-1v79r3e{flex-direction:row;font-size:12px !important;justify-content:space-evenly}\n/*# sourceMappingURL=data:application/json;charset=utf-8;base64,eyJ2ZXJzaW9uIjozLCJmaWxlIjoiU2Fua2V5LnN2ZWx0ZSIsInNvdXJjZXMiOlsiU2Fua2V5LnN2ZWx0ZSJdLCJzb3VyY2VzQ29udGVudCI6WyI8c2NyaXB0PlxuICBpbXBvcnQgbGF5b3V0IGZyb20gJy4vbGF5b3V0J1xuICBpbXBvcnQgeyBpdGVtcyB9IGZyb20gJy4vbGliL3N0b3JlLmpzJ1xuICBpbXBvcnQgeyBvbk1vdW50IH0gZnJvbSAnc3ZlbHRlJ1xuICBpbXBvcnQgYyBmcm9tICdzcGVuY2VyLWNvbG9yJ1xuICBsZXQgY29sb3JzID0gYy5jb2xvcnNcbiAgZXhwb3J0IGxldCB3aWR0aCA9IDgwMFxuICBleHBvcnQgbGV0IGhlaWdodCA9IDUwMFxuICBoZWlnaHQgPSBOdW1iZXIoaGVpZ2h0KVxuICB3aWR0aCA9IE51bWJlcih3aWR0aClcbiAgbGV0IG5vZGVzID0gW11cbiAgbGV0IHBhdGhzID0gW11cbiAgbGV0IGNvbG9yID0gJ3N0ZWVsYmx1ZSdcbiAgbGV0IGFjY2VudCA9ICcjZDk4Yjg5J1xuICBvbk1vdW50KCgpID0+IHtcbiAgICA7KHsgbm9kZXMsIHBhdGhzIH0gPSBsYXlvdXQoJGl0ZW1zLCB3aWR0aCwgaGVpZ2h0KSlcbiAgICAvLyBjb25zb2xlLmxvZyhwYXRocylcbiAgfSlcbjwvc2NyaXB0PlxuXG48c3R5bGU+XG4gIC5ub2RlIHtcbiAgICBwb3NpdGlvbjogYWJzb2x1dGU7XG4gICAgYm9yZGVyLXJhZGl1czogM3B4O1xuICAgIGJveC1zaGFkb3c6IDJweCAycHggOHB4IDBweCByZ2JhKDAsIDAsIDAsIDAuMik7XG4gICAgY29sb3I6ICNkZWRlZGU7XG4gICAgdGV4dC1hbGlnbjogY2VudGVyO1xuICAgIGRpc3BsYXk6IGZsZXg7XG4gICAgZmxleC1kaXJlY3Rpb246IGNvbHVtbjtcbiAgICBhbGlnbi1pdGVtczogY2VudGVyO1xuICAgIGp1c3RpZnktY29udGVudDogY2VudGVyO1xuICAgIGJvcmRlci1ib3R0b206IDRweCBzb2xpZCAjZDk4Yjg5O1xuICAgIGZvbnQtc2l6ZTogMTVweDtcbiAgICBmb250LWZhbWlseTogJ0NhdGFtYXJhbicsIHNhbnMtc2VyaWY7XG4gIH1cbiAgLmxpbmsge1xuICAgIG9wYWNpdHk6IDAuMjtcbiAgfVxuICAubGluazpob3ZlciB7XG4gICAgc3Ryb2tlLW9wYWNpdHk6IDE7XG4gIH1cbiAgLnZhbHVlIHtcbiAgICBmb250LXNpemU6IDI1cHg7XG4gIH1cbiAgLnRpbnkge1xuICAgIGZsZXgtZGlyZWN0aW9uOiByb3c7XG4gICAgZm9udC1zaXplOiAxMnB4ICFpbXBvcnRhbnQ7XG4gICAganVzdGlmeS1jb250ZW50OiBzcGFjZS1ldmVubHk7XG4gIH1cbjwvc3R5bGU+XG5cbjxkaXYgc3R5bGU9XCJwb3NpdGlvbjpyZWxhdGl2ZTtcIj5cbiAgPGRpdiBzdHlsZT1cInBvc2l0aW9uOmFic29sdXRlOyB3aWR0aDp7d2lkdGh9cHg7IGhlaWdodDp7aGVpZ2h0fXB4O1wiPlxuICAgIHsjZWFjaCBub2RlcyBhcyBkfVxuICAgICAgPGRpdlxuICAgICAgICBjbGFzcz1cIm5vZGVcIlxuICAgICAgICBjbGFzczp0aW55PXtkLmhlaWdodCA8IDgwfVxuICAgICAgICBzdHlsZT1cImxlZnQ6e2QueH1weDsgdG9wOntkLnl9cHg7IHdpZHRoOntkLndpZHRofXB4OyBiYWNrZ3JvdW5kLWNvbG9yOntjb2xvcnNbZC5jb2xvcl0gfHwgY29sb3J9O1xuICAgICAgICBoZWlnaHQ6e2QuaGVpZ2h0fXB4OyBib3JkZXItYm90dG9tOiA0cHggc29saWQge2NvbG9yc1tkLmFjY2VudF0gfHwgYWNjZW50fTtcbiAgICAgICAgb3BhY2l0eTp7ZC5vcGFjaXR5IHx8IDF9O1wiPlxuICAgICAgICA8ZGl2IGNsYXNzPVwibGFiZWxcIj57ZC5uYW1lfTwvZGl2PlxuICAgICAgICA8ZGl2XG4gICAgICAgICAgY2xhc3M9XCJ2YWx1ZVwiXG4gICAgICAgICAgY2xhc3M6dGlueT17ZC5oZWlnaHQgPCA4MH1cbiAgICAgICAgICBzdHlsZT1cImNvbG9yOntjb2xvcnNbZC5hY2NlbnRdIHx8IGFjY2VudH07XCI+XG4gICAgICAgICAge01hdGguY2VpbChkLnZhbHVlICogMTAwKSAvIDEwMH1tXG4gICAgICAgIDwvZGl2PlxuICAgICAgPC9kaXY+XG4gICAgey9lYWNofVxuXG4gIDwvZGl2PlxuXG4gIDxzdmcgdmlld0JveD1cIjAsMCx7d2lkdGh9LHtoZWlnaHR9XCIge3dpZHRofSB7aGVpZ2h0fT5cbiAgICB7I2VhY2ggcGF0aHMgYXMgZH1cbiAgICAgIDxwYXRoXG4gICAgICAgIGNsYXNzPVwibGlua1wiXG4gICAgICAgIHtkfVxuICAgICAgICBzdHJva2U9XCJub25lXCJcbiAgICAgICAgZmlsbD1cImxpZ2h0c3RlZWxibHVlXCJcbiAgICAgICAgc3R5bGU9XCJcIlxuICAgICAgICBzdHJva2Utd2lkdGg9ezF9IC8+XG4gICAgey9lYWNofVxuICA8L3N2Zz5cbjwvZGl2PlxuXG48c2xvdCAvPlxuIl0sIm5hbWVzIjpbXSwibWFwcGluZ3MiOiJBQXFCRSxLQUFLLGVBQUMsQ0FBQyxBQUNMLFFBQVEsQ0FBRSxRQUFRLENBQ2xCLGFBQWEsQ0FBRSxHQUFHLENBQ2xCLFVBQVUsQ0FBRSxHQUFHLENBQUMsR0FBRyxDQUFDLEdBQUcsQ0FBQyxHQUFHLENBQUMsS0FBSyxDQUFDLENBQUMsQ0FBQyxDQUFDLENBQUMsQ0FBQyxDQUFDLENBQUMsQ0FBQyxHQUFHLENBQUMsQ0FDOUMsS0FBSyxDQUFFLE9BQU8sQ0FDZCxVQUFVLENBQUUsTUFBTSxDQUNsQixPQUFPLENBQUUsSUFBSSxDQUNiLGNBQWMsQ0FBRSxNQUFNLENBQ3RCLFdBQVcsQ0FBRSxNQUFNLENBQ25CLGVBQWUsQ0FBRSxNQUFNLENBQ3ZCLGFBQWEsQ0FBRSxHQUFHLENBQUMsS0FBSyxDQUFDLE9BQU8sQ0FDaEMsU0FBUyxDQUFFLElBQUksQ0FDZixXQUFXLENBQUUsV0FBVyxDQUFDLENBQUMsVUFBVSxBQUN0QyxDQUFDLEFBQ0QsS0FBSyxlQUFDLENBQUMsQUFDTCxPQUFPLENBQUUsR0FBRyxBQUNkLENBQUMsQUFDRCxvQkFBSyxNQUFNLEFBQUMsQ0FBQyxBQUNYLGNBQWMsQ0FBRSxDQUFDLEFBQ25CLENBQUMsQUFDRCxNQUFNLGVBQUMsQ0FBQyxBQUNOLFNBQVMsQ0FBRSxJQUFJLEFBQ2pCLENBQUMsQUFDRCxLQUFLLGVBQUMsQ0FBQyxBQUNMLGNBQWMsQ0FBRSxHQUFHLENBQ25CLFNBQVMsQ0FBRSxJQUFJLENBQUMsVUFBVSxDQUMxQixlQUFlLENBQUUsWUFBWSxBQUMvQixDQUFDIn0= */";
+    	style.textContent = ".node.svelte-1v79r3e{position:absolute;border-radius:3px;box-shadow:2px 2px 8px 0px rgba(0, 0, 0, 0.2);color:#dedede;text-align:center;display:flex;flex-direction:column;align-items:center;justify-content:center;border-bottom:4px solid #d98b89;font-size:15px;font-family:'Catamaran', sans-serif}.link.svelte-1v79r3e{opacity:0.2}.link.svelte-1v79r3e:hover{stroke-opacity:1}.value.svelte-1v79r3e{font-size:25px}.tiny.svelte-1v79r3e{flex-direction:row;font-size:12px !important;justify-content:space-evenly}\n/*# sourceMappingURL=data:application/json;charset=utf-8;base64,eyJ2ZXJzaW9uIjozLCJmaWxlIjoiU2Fua2V5LnN2ZWx0ZSIsInNvdXJjZXMiOlsiU2Fua2V5LnN2ZWx0ZSJdLCJzb3VyY2VzQ29udGVudCI6WyI8c2NyaXB0PlxuICBpbXBvcnQgbGF5b3V0IGZyb20gJy4vbGF5b3V0J1xuICBpbXBvcnQgeyBpdGVtcyB9IGZyb20gJy4vbGliL3N0b3JlLmpzJ1xuICBpbXBvcnQgeyBvbk1vdW50IH0gZnJvbSAnc3ZlbHRlJ1xuICBpbXBvcnQgYyBmcm9tICdzcGVuY2VyLWNvbG9yJ1xuICBsZXQgY29sb3JzID0gYy5jb2xvcnNcbiAgZXhwb3J0IGxldCB3aWR0aCA9IDgwMFxuICBleHBvcnQgbGV0IGhlaWdodCA9IDUwMFxuICBleHBvcnQgbGV0IG5vZGVXaWR0aCA9IDEyMFxuICBleHBvcnQgbGV0IGZtdCA9IG51bSA9PiB7XG4gICAgaWYgKG51bSA+PSAxMDAwMDAwKSB7XG4gICAgICBudW0gPSBNYXRoLnJvdW5kKG51bSAvIDEwMDAwMDApICogMTAwMDAwMFxuICAgICAgcmV0dXJuIFN0cmluZyhudW0gLyAxMDAwMDAwKSArICdtJ1xuICAgIH1cbiAgICBpZiAobnVtID4gMTAwMCkge1xuICAgICAgcmV0dXJuIFN0cmluZyhudW0gLyAxMDAwKSArICdrJ1xuICAgIH1cbiAgICByZXR1cm4gU3RyaW5nKG51bSlcbiAgfVxuICBoZWlnaHQgPSBOdW1iZXIoaGVpZ2h0KVxuICB3aWR0aCA9IE51bWJlcih3aWR0aClcbiAgbGV0IG5vZGVzID0gW11cbiAgbGV0IHBhdGhzID0gW11cbiAgbGV0IGNvbG9yID0gJ3N0ZWVsYmx1ZSdcbiAgbGV0IGFjY2VudCA9ICcjZDk4Yjg5J1xuICBvbk1vdW50KCgpID0+IHtcbiAgICA7KHsgbm9kZXMsIHBhdGhzIH0gPSBsYXlvdXQoJGl0ZW1zLCB3aWR0aCwgaGVpZ2h0LCBub2RlV2lkdGgpKVxuICAgIC8vIGNvbnNvbGUubG9nKHBhdGhzKVxuICB9KVxuPC9zY3JpcHQ+XG5cbjxzdHlsZT5cbiAgLm5vZGUge1xuICAgIHBvc2l0aW9uOiBhYnNvbHV0ZTtcbiAgICBib3JkZXItcmFkaXVzOiAzcHg7XG4gICAgYm94LXNoYWRvdzogMnB4IDJweCA4cHggMHB4IHJnYmEoMCwgMCwgMCwgMC4yKTtcbiAgICBjb2xvcjogI2RlZGVkZTtcbiAgICB0ZXh0LWFsaWduOiBjZW50ZXI7XG4gICAgZGlzcGxheTogZmxleDtcbiAgICBmbGV4LWRpcmVjdGlvbjogY29sdW1uO1xuICAgIGFsaWduLWl0ZW1zOiBjZW50ZXI7XG4gICAganVzdGlmeS1jb250ZW50OiBjZW50ZXI7XG4gICAgYm9yZGVyLWJvdHRvbTogNHB4IHNvbGlkICNkOThiODk7XG4gICAgZm9udC1zaXplOiAxNXB4O1xuICAgIGZvbnQtZmFtaWx5OiAnQ2F0YW1hcmFuJywgc2Fucy1zZXJpZjtcbiAgfVxuICAubGluayB7XG4gICAgb3BhY2l0eTogMC4yO1xuICB9XG4gIC5saW5rOmhvdmVyIHtcbiAgICBzdHJva2Utb3BhY2l0eTogMTtcbiAgfVxuICAudmFsdWUge1xuICAgIGZvbnQtc2l6ZTogMjVweDtcbiAgfVxuICAudGlueSB7XG4gICAgZmxleC1kaXJlY3Rpb246IHJvdztcbiAgICBmb250LXNpemU6IDEycHggIWltcG9ydGFudDtcbiAgICBqdXN0aWZ5LWNvbnRlbnQ6IHNwYWNlLWV2ZW5seTtcbiAgfVxuPC9zdHlsZT5cblxuPGRpdiBzdHlsZT1cInBvc2l0aW9uOnJlbGF0aXZlO1wiPlxuICA8ZGl2IHN0eWxlPVwicG9zaXRpb246YWJzb2x1dGU7IHdpZHRoOnt3aWR0aH1weDsgaGVpZ2h0OntoZWlnaHR9cHg7XCI+XG4gICAgeyNlYWNoIG5vZGVzIGFzIGR9XG4gICAgICA8ZGl2XG4gICAgICAgIGNsYXNzPVwibm9kZVwiXG4gICAgICAgIGNsYXNzOnRpbnk9e2QuaGVpZ2h0IDwgODB9XG4gICAgICAgIHN0eWxlPVwibGVmdDp7ZC54fXB4OyB0b3A6e2QueX1weDsgd2lkdGg6e2Qud2lkdGh9cHg7IGJhY2tncm91bmQtY29sb3I6e2NvbG9yc1tkLmNvbG9yXSB8fCBjb2xvcn07XG4gICAgICAgIGhlaWdodDp7ZC5oZWlnaHR9cHg7IGJvcmRlci1ib3R0b206IDRweCBzb2xpZCB7Y29sb3JzW2QuYWNjZW50XSB8fCBhY2NlbnR9O1xuICAgICAgICBvcGFjaXR5OntkLm9wYWNpdHkgfHwgMX07XCI+XG4gICAgICAgIDxkaXYgY2xhc3M9XCJsYWJlbFwiPntkLm5hbWV9PC9kaXY+XG4gICAgICAgIDxkaXZcbiAgICAgICAgICBjbGFzcz1cInZhbHVlXCJcbiAgICAgICAgICBjbGFzczp0aW55PXtkLmhlaWdodCA8IDgwfVxuICAgICAgICAgIHN0eWxlPVwiY29sb3I6e2NvbG9yc1tkLmFjY2VudF0gfHwgYWNjZW50fTtcIj5cbiAgICAgICAgICB7Zm10KGQudmFsdWUpfVxuICAgICAgICA8L2Rpdj5cbiAgICAgIDwvZGl2PlxuICAgIHsvZWFjaH1cblxuICA8L2Rpdj5cblxuICA8c3ZnIHZpZXdCb3g9XCIwLDAse3dpZHRofSx7aGVpZ2h0fVwiIHt3aWR0aH0ge2hlaWdodH0+XG4gICAgeyNlYWNoIHBhdGhzIGFzIGR9XG4gICAgICA8cGF0aFxuICAgICAgICBjbGFzcz1cImxpbmtcIlxuICAgICAgICB7ZH1cbiAgICAgICAgc3Ryb2tlPVwibm9uZVwiXG4gICAgICAgIGZpbGw9XCJsaWdodHN0ZWVsYmx1ZVwiXG4gICAgICAgIHN0eWxlPVwiXCJcbiAgICAgICAgc3Ryb2tlLXdpZHRoPXsxfSAvPlxuICAgIHsvZWFjaH1cbiAgPC9zdmc+XG48L2Rpdj5cblxuPHNsb3QgLz5cbiJdLCJuYW1lcyI6W10sIm1hcHBpbmdzIjoiQUFnQ0UsS0FBSyxlQUFDLENBQUMsQUFDTCxRQUFRLENBQUUsUUFBUSxDQUNsQixhQUFhLENBQUUsR0FBRyxDQUNsQixVQUFVLENBQUUsR0FBRyxDQUFDLEdBQUcsQ0FBQyxHQUFHLENBQUMsR0FBRyxDQUFDLEtBQUssQ0FBQyxDQUFDLENBQUMsQ0FBQyxDQUFDLENBQUMsQ0FBQyxDQUFDLENBQUMsR0FBRyxDQUFDLENBQzlDLEtBQUssQ0FBRSxPQUFPLENBQ2QsVUFBVSxDQUFFLE1BQU0sQ0FDbEIsT0FBTyxDQUFFLElBQUksQ0FDYixjQUFjLENBQUUsTUFBTSxDQUN0QixXQUFXLENBQUUsTUFBTSxDQUNuQixlQUFlLENBQUUsTUFBTSxDQUN2QixhQUFhLENBQUUsR0FBRyxDQUFDLEtBQUssQ0FBQyxPQUFPLENBQ2hDLFNBQVMsQ0FBRSxJQUFJLENBQ2YsV0FBVyxDQUFFLFdBQVcsQ0FBQyxDQUFDLFVBQVUsQUFDdEMsQ0FBQyxBQUNELEtBQUssZUFBQyxDQUFDLEFBQ0wsT0FBTyxDQUFFLEdBQUcsQUFDZCxDQUFDLEFBQ0Qsb0JBQUssTUFBTSxBQUFDLENBQUMsQUFDWCxjQUFjLENBQUUsQ0FBQyxBQUNuQixDQUFDLEFBQ0QsTUFBTSxlQUFDLENBQUMsQUFDTixTQUFTLENBQUUsSUFBSSxBQUNqQixDQUFDLEFBQ0QsS0FBSyxlQUFDLENBQUMsQUFDTCxjQUFjLENBQUUsR0FBRyxDQUNuQixTQUFTLENBQUUsSUFBSSxDQUFDLFVBQVUsQ0FDMUIsZUFBZSxDQUFFLFlBQVksQUFDL0IsQ0FBQyJ9 */";
     	append_dev(document.head, style);
     }
 
     function get_each_context(ctx, list, i) {
     	const child_ctx = ctx.slice();
-    	child_ctx[10] = list[i];
+    	child_ctx[12] = list[i];
     	return child_ctx;
     }
 
     function get_each_context_1(ctx, list, i) {
     	const child_ctx = ctx.slice();
-    	child_ctx[10] = list[i];
+    	child_ctx[12] = list[i];
     	return child_ctx;
     }
 
-    // (54:4) {#each nodes as d}
+    // (65:4) {#each nodes as d}
     function create_each_block_1(ctx) {
     	let div2;
     	let div0;
-    	let t0_value = /*d*/ ctx[10].name + "";
+    	let t0_value = /*d*/ ctx[12].name + "";
     	let t0;
     	let t1;
     	let div1;
-    	let t2_value = Math.ceil(/*d*/ ctx[10].value * 100) / 100 + "";
+    	let t2_value = /*fmt*/ ctx[2](/*d*/ ctx[12].value) + "";
     	let t2;
     	let t3;
-    	let t4;
 
     	const block = {
     		c: function create() {
@@ -804,24 +800,23 @@ var app = (function () {
     			t1 = space();
     			div1 = element("div");
     			t2 = text(t2_value);
-    			t3 = text("m");
-    			t4 = space();
+    			t3 = space();
     			attr_dev(div0, "class", "label");
-    			add_location(div0, file, 60, 8, 1498);
+    			add_location(div0, file, 71, 8, 1780);
     			attr_dev(div1, "class", "value svelte-1v79r3e");
-    			set_style(div1, "color", /*colors*/ ctx[4][/*d*/ ctx[10].accent] || /*accent*/ ctx[6]);
-    			toggle_class(div1, "tiny", /*d*/ ctx[10].height < 80);
-    			add_location(div1, file, 61, 8, 1540);
+    			set_style(div1, "color", /*colors*/ ctx[5][/*d*/ ctx[12].accent] || /*accent*/ ctx[7]);
+    			toggle_class(div1, "tiny", /*d*/ ctx[12].height < 80);
+    			add_location(div1, file, 72, 8, 1822);
     			attr_dev(div2, "class", "node svelte-1v79r3e");
-    			set_style(div2, "left", /*d*/ ctx[10].x + "px");
-    			set_style(div2, "top", /*d*/ ctx[10].y + "px");
-    			set_style(div2, "width", /*d*/ ctx[10].width + "px");
-    			set_style(div2, "background-color", /*colors*/ ctx[4][/*d*/ ctx[10].color] || /*color*/ ctx[5]);
-    			set_style(div2, "height", /*d*/ ctx[10].height + "px");
-    			set_style(div2, "border-bottom", "4px solid " + (/*colors*/ ctx[4][/*d*/ ctx[10].accent] || /*accent*/ ctx[6]));
-    			set_style(div2, "opacity", /*d*/ ctx[10].opacity || 1);
-    			toggle_class(div2, "tiny", /*d*/ ctx[10].height < 80);
-    			add_location(div2, file, 54, 6, 1203);
+    			set_style(div2, "left", /*d*/ ctx[12].x + "px");
+    			set_style(div2, "top", /*d*/ ctx[12].y + "px");
+    			set_style(div2, "width", /*d*/ ctx[12].width + "px");
+    			set_style(div2, "background-color", /*colors*/ ctx[5][/*d*/ ctx[12].color] || /*color*/ ctx[6]);
+    			set_style(div2, "height", /*d*/ ctx[12].height + "px");
+    			set_style(div2, "border-bottom", "4px solid " + (/*colors*/ ctx[5][/*d*/ ctx[12].accent] || /*accent*/ ctx[7]));
+    			set_style(div2, "opacity", /*d*/ ctx[12].opacity || 1);
+    			toggle_class(div2, "tiny", /*d*/ ctx[12].height < 80);
+    			add_location(div2, file, 65, 6, 1485);
     		},
     		m: function mount(target, anchor) {
     			insert_dev(target, div2, anchor);
@@ -830,51 +825,50 @@ var app = (function () {
     			append_dev(div2, t1);
     			append_dev(div2, div1);
     			append_dev(div1, t2);
-    			append_dev(div1, t3);
-    			append_dev(div2, t4);
+    			append_dev(div2, t3);
     		},
     		p: function update(ctx, dirty) {
-    			if (dirty & /*nodes*/ 4 && t0_value !== (t0_value = /*d*/ ctx[10].name + "")) set_data_dev(t0, t0_value);
-    			if (dirty & /*nodes*/ 4 && t2_value !== (t2_value = Math.ceil(/*d*/ ctx[10].value * 100) / 100 + "")) set_data_dev(t2, t2_value);
+    			if (dirty & /*nodes*/ 8 && t0_value !== (t0_value = /*d*/ ctx[12].name + "")) set_data_dev(t0, t0_value);
+    			if (dirty & /*fmt, nodes*/ 12 && t2_value !== (t2_value = /*fmt*/ ctx[2](/*d*/ ctx[12].value) + "")) set_data_dev(t2, t2_value);
 
-    			if (dirty & /*nodes*/ 4) {
-    				set_style(div1, "color", /*colors*/ ctx[4][/*d*/ ctx[10].accent] || /*accent*/ ctx[6]);
+    			if (dirty & /*nodes*/ 8) {
+    				set_style(div1, "color", /*colors*/ ctx[5][/*d*/ ctx[12].accent] || /*accent*/ ctx[7]);
     			}
 
-    			if (dirty & /*nodes*/ 4) {
-    				toggle_class(div1, "tiny", /*d*/ ctx[10].height < 80);
+    			if (dirty & /*nodes*/ 8) {
+    				toggle_class(div1, "tiny", /*d*/ ctx[12].height < 80);
     			}
 
-    			if (dirty & /*nodes*/ 4) {
-    				set_style(div2, "left", /*d*/ ctx[10].x + "px");
+    			if (dirty & /*nodes*/ 8) {
+    				set_style(div2, "left", /*d*/ ctx[12].x + "px");
     			}
 
-    			if (dirty & /*nodes*/ 4) {
-    				set_style(div2, "top", /*d*/ ctx[10].y + "px");
+    			if (dirty & /*nodes*/ 8) {
+    				set_style(div2, "top", /*d*/ ctx[12].y + "px");
     			}
 
-    			if (dirty & /*nodes*/ 4) {
-    				set_style(div2, "width", /*d*/ ctx[10].width + "px");
+    			if (dirty & /*nodes*/ 8) {
+    				set_style(div2, "width", /*d*/ ctx[12].width + "px");
     			}
 
-    			if (dirty & /*nodes*/ 4) {
-    				set_style(div2, "background-color", /*colors*/ ctx[4][/*d*/ ctx[10].color] || /*color*/ ctx[5]);
+    			if (dirty & /*nodes*/ 8) {
+    				set_style(div2, "background-color", /*colors*/ ctx[5][/*d*/ ctx[12].color] || /*color*/ ctx[6]);
     			}
 
-    			if (dirty & /*nodes*/ 4) {
-    				set_style(div2, "height", /*d*/ ctx[10].height + "px");
+    			if (dirty & /*nodes*/ 8) {
+    				set_style(div2, "height", /*d*/ ctx[12].height + "px");
     			}
 
-    			if (dirty & /*nodes*/ 4) {
-    				set_style(div2, "border-bottom", "4px solid " + (/*colors*/ ctx[4][/*d*/ ctx[10].accent] || /*accent*/ ctx[6]));
+    			if (dirty & /*nodes*/ 8) {
+    				set_style(div2, "border-bottom", "4px solid " + (/*colors*/ ctx[5][/*d*/ ctx[12].accent] || /*accent*/ ctx[7]));
     			}
 
-    			if (dirty & /*nodes*/ 4) {
-    				set_style(div2, "opacity", /*d*/ ctx[10].opacity || 1);
+    			if (dirty & /*nodes*/ 8) {
+    				set_style(div2, "opacity", /*d*/ ctx[12].opacity || 1);
     			}
 
-    			if (dirty & /*nodes*/ 4) {
-    				toggle_class(div2, "tiny", /*d*/ ctx[10].height < 80);
+    			if (dirty & /*nodes*/ 8) {
+    				toggle_class(div2, "tiny", /*d*/ ctx[12].height < 80);
     			}
     		},
     		d: function destroy(detaching) {
@@ -886,14 +880,14 @@ var app = (function () {
     		block,
     		id: create_each_block_1.name,
     		type: "each",
-    		source: "(54:4) {#each nodes as d}",
+    		source: "(65:4) {#each nodes as d}",
     		ctx
     	});
 
     	return block;
     }
 
-    // (74:4) {#each paths as d}
+    // (85:4) {#each paths as d}
     function create_each_block(ctx) {
     	let path;
     	let path_d_value;
@@ -903,17 +897,17 @@ var app = (function () {
     		c: function create() {
     			path = svg_element("path");
     			attr_dev(path, "class", "link svelte-1v79r3e");
-    			attr_dev(path, "d", path_d_value = /*d*/ ctx[10]);
+    			attr_dev(path, "d", path_d_value = /*d*/ ctx[12]);
     			attr_dev(path, "stroke", "none");
     			attr_dev(path, "fill", "lightsteelblue");
     			attr_dev(path, "stroke-width", path_stroke_width_value = 1);
-    			add_location(path, file, 74, 6, 1841);
+    			add_location(path, file, 85, 6, 2104);
     		},
     		m: function mount(target, anchor) {
     			insert_dev(target, path, anchor);
     		},
     		p: function update(ctx, dirty) {
-    			if (dirty & /*paths*/ 8 && path_d_value !== (path_d_value = /*d*/ ctx[10])) {
+    			if (dirty & /*paths*/ 16 && path_d_value !== (path_d_value = /*d*/ ctx[12])) {
     				attr_dev(path, "d", path_d_value);
     			}
     		},
@@ -926,7 +920,7 @@ var app = (function () {
     		block,
     		id: create_each_block.name,
     		type: "each",
-    		source: "(74:4) {#each paths as d}",
+    		source: "(85:4) {#each paths as d}",
     		ctx
     	});
 
@@ -941,7 +935,7 @@ var app = (function () {
     	let svg_viewBox_value;
     	let t1;
     	let current;
-    	let each_value_1 = /*nodes*/ ctx[2];
+    	let each_value_1 = /*nodes*/ ctx[3];
     	validate_each_argument(each_value_1);
     	let each_blocks_1 = [];
 
@@ -949,7 +943,7 @@ var app = (function () {
     		each_blocks_1[i] = create_each_block_1(get_each_context_1(ctx, each_value_1, i));
     	}
 
-    	let each_value = /*paths*/ ctx[3];
+    	let each_value = /*paths*/ ctx[4];
     	validate_each_argument(each_value);
     	let each_blocks = [];
 
@@ -957,8 +951,8 @@ var app = (function () {
     		each_blocks[i] = create_each_block(get_each_context(ctx, each_value, i));
     	}
 
-    	const default_slot_template = /*$$slots*/ ctx[9].default;
-    	const default_slot = create_slot(default_slot_template, ctx, /*$$scope*/ ctx[8], null);
+    	const default_slot_template = /*$$slots*/ ctx[11].default;
+    	const default_slot = create_slot(default_slot_template, ctx, /*$$scope*/ ctx[10], null);
 
     	const block = {
     		c: function create() {
@@ -981,13 +975,13 @@ var app = (function () {
     			set_style(div0, "position", "absolute");
     			set_style(div0, "width", /*width*/ ctx[0] + "px");
     			set_style(div0, "height", /*height*/ ctx[1] + "px");
-    			add_location(div0, file, 52, 2, 1105);
+    			add_location(div0, file, 63, 2, 1387);
     			attr_dev(svg, "viewBox", svg_viewBox_value = "0,0," + /*width*/ ctx[0] + "," + /*height*/ ctx[1]);
     			attr_dev(svg, "width", /*width*/ ctx[0]);
     			attr_dev(svg, "height", /*height*/ ctx[1]);
-    			add_location(svg, file, 72, 2, 1758);
+    			add_location(svg, file, 83, 2, 2021);
     			set_style(div1, "position", "relative");
-    			add_location(div1, file, 51, 0, 1070);
+    			add_location(div1, file, 62, 0, 1352);
     		},
     		l: function claim(nodes) {
     			throw new Error("options.hydrate only works if the component was compiled with the `hydratable: true` option");
@@ -1016,8 +1010,8 @@ var app = (function () {
     			current = true;
     		},
     		p: function update(ctx, [dirty]) {
-    			if (dirty & /*nodes, colors, color, accent, Math*/ 116) {
-    				each_value_1 = /*nodes*/ ctx[2];
+    			if (dirty & /*nodes, colors, color, accent, fmt*/ 236) {
+    				each_value_1 = /*nodes*/ ctx[3];
     				validate_each_argument(each_value_1);
     				let i;
 
@@ -1048,8 +1042,8 @@ var app = (function () {
     				set_style(div0, "height", /*height*/ ctx[1] + "px");
     			}
 
-    			if (dirty & /*paths*/ 8) {
-    				each_value = /*paths*/ ctx[3];
+    			if (dirty & /*paths*/ 16) {
+    				each_value = /*paths*/ ctx[4];
     				validate_each_argument(each_value);
     				let i;
 
@@ -1085,8 +1079,8 @@ var app = (function () {
     			}
 
     			if (default_slot) {
-    				if (default_slot.p && dirty & /*$$scope*/ 256) {
-    					default_slot.p(get_slot_context(default_slot_template, ctx, /*$$scope*/ ctx[8], null), get_slot_changes(default_slot_template, /*$$scope*/ ctx[8], dirty, null));
+    				if (default_slot.p && dirty & /*$$scope*/ 1024) {
+    					default_slot.p(get_slot_context(default_slot_template, ctx, /*$$scope*/ ctx[10], null), get_slot_changes(default_slot_template, /*$$scope*/ ctx[10], dirty, null));
     				}
     			}
     		},
@@ -1122,10 +1116,25 @@ var app = (function () {
     function instance($$self, $$props, $$invalidate) {
     	let $items;
     	validate_store(items, "items");
-    	component_subscribe($$self, items, $$value => $$invalidate(7, $items = $$value));
+    	component_subscribe($$self, items, $$value => $$invalidate(9, $items = $$value));
     	let colors = spencerColor.colors;
     	let { width = 800 } = $$props;
     	let { height = 500 } = $$props;
+    	let { nodeWidth = 120 } = $$props;
+
+    	let { fmt = num => {
+    		if (num >= 1000000) {
+    			num = Math.round(num / 1000000) * 1000000;
+    			return String(num / 1000000) + "m";
+    		}
+
+    		if (num > 1000) {
+    			return String(num / 1000) + "k";
+    		}
+
+    		return String(num);
+    	} } = $$props;
+
     	height = Number(height);
     	width = Number(width);
     	let nodes = [];
@@ -1135,10 +1144,10 @@ var app = (function () {
 
     	onMount(() => {
     		
-    		$$invalidate(2, { nodes, paths } = layout($items, width, height), nodes, $$invalidate(3, paths));
+    		$$invalidate(3, { nodes, paths } = layout($items, width, height, nodeWidth), nodes, $$invalidate(4, paths));
     	}); // console.log(paths)
 
-    	const writable_props = ["width", "height"];
+    	const writable_props = ["width", "height", "nodeWidth", "fmt"];
 
     	Object.keys($$props).forEach(key => {
     		if (!~writable_props.indexOf(key) && key.slice(0, 2) !== "$$") console.warn(`<Sankey> was created with unknown prop '${key}'`);
@@ -1150,7 +1159,9 @@ var app = (function () {
     	$$self.$set = $$props => {
     		if ("width" in $$props) $$invalidate(0, width = $$props.width);
     		if ("height" in $$props) $$invalidate(1, height = $$props.height);
-    		if ("$$scope" in $$props) $$invalidate(8, $$scope = $$props.$$scope);
+    		if ("nodeWidth" in $$props) $$invalidate(8, nodeWidth = $$props.nodeWidth);
+    		if ("fmt" in $$props) $$invalidate(2, fmt = $$props.fmt);
+    		if ("$$scope" in $$props) $$invalidate(10, $$scope = $$props.$$scope);
     	};
 
     	$$self.$capture_state = () => ({
@@ -1161,6 +1172,8 @@ var app = (function () {
     		colors,
     		width,
     		height,
+    		nodeWidth,
+    		fmt,
     		nodes,
     		paths,
     		color,
@@ -1169,27 +1182,48 @@ var app = (function () {
     	});
 
     	$$self.$inject_state = $$props => {
-    		if ("colors" in $$props) $$invalidate(4, colors = $$props.colors);
+    		if ("colors" in $$props) $$invalidate(5, colors = $$props.colors);
     		if ("width" in $$props) $$invalidate(0, width = $$props.width);
     		if ("height" in $$props) $$invalidate(1, height = $$props.height);
-    		if ("nodes" in $$props) $$invalidate(2, nodes = $$props.nodes);
-    		if ("paths" in $$props) $$invalidate(3, paths = $$props.paths);
-    		if ("color" in $$props) $$invalidate(5, color = $$props.color);
-    		if ("accent" in $$props) $$invalidate(6, accent = $$props.accent);
+    		if ("nodeWidth" in $$props) $$invalidate(8, nodeWidth = $$props.nodeWidth);
+    		if ("fmt" in $$props) $$invalidate(2, fmt = $$props.fmt);
+    		if ("nodes" in $$props) $$invalidate(3, nodes = $$props.nodes);
+    		if ("paths" in $$props) $$invalidate(4, paths = $$props.paths);
+    		if ("color" in $$props) $$invalidate(6, color = $$props.color);
+    		if ("accent" in $$props) $$invalidate(7, accent = $$props.accent);
     	};
 
     	if ($$props && "$$inject" in $$props) {
     		$$self.$inject_state($$props.$$inject);
     	}
 
-    	return [width, height, nodes, paths, colors, color, accent, $items, $$scope, $$slots];
+    	return [
+    		width,
+    		height,
+    		fmt,
+    		nodes,
+    		paths,
+    		colors,
+    		color,
+    		accent,
+    		nodeWidth,
+    		$items,
+    		$$scope,
+    		$$slots
+    	];
     }
 
     class Sankey extends SvelteComponentDev {
     	constructor(options) {
     		super(options);
     		if (!document.getElementById("svelte-1v79r3e-style")) add_css();
-    		init(this, options, instance, create_fragment, safe_not_equal, { width: 0, height: 1 });
+
+    		init(this, options, instance, create_fragment, safe_not_equal, {
+    			width: 0,
+    			height: 1,
+    			nodeWidth: 8,
+    			fmt: 2
+    		});
 
     		dispatch_dev("SvelteRegisterComponent", {
     			component: this,
@@ -1212,6 +1246,22 @@ var app = (function () {
     	}
 
     	set height(value) {
+    		throw new Error("<Sankey>: Props cannot be set directly on the component instance unless compiling with 'accessors: true' or '<svelte:options accessors/>'");
+    	}
+
+    	get nodeWidth() {
+    		throw new Error("<Sankey>: Props cannot be read directly from the component instance unless compiling with 'accessors: true' or '<svelte:options accessors/>'");
+    	}
+
+    	set nodeWidth(value) {
+    		throw new Error("<Sankey>: Props cannot be set directly on the component instance unless compiling with 'accessors: true' or '<svelte:options accessors/>'");
+    	}
+
+    	get fmt() {
+    		throw new Error("<Sankey>: Props cannot be read directly from the component instance unless compiling with 'accessors: true' or '<svelte:options accessors/>'");
+    	}
+
+    	set fmt(value) {
     		throw new Error("<Sankey>: Props cannot be set directly on the component instance unless compiling with 'accessors: true' or '<svelte:options accessors/>'");
     	}
     }
@@ -1254,6 +1304,10 @@ var app = (function () {
     	let { dy = "0" } = $$props;
     	let { dx = "0" } = $$props;
     	let { opacity = "1" } = $$props;
+
+    	if (typeof value === "string") {
+    		value = value.replace(/,/g, "");
+    	}
 
     	let row = {
     		name,
@@ -1529,7 +1583,7 @@ var app = (function () {
 
     /* Demo.svelte generated by Svelte v3.22.2 */
 
-    // (7:2) <Col>
+    // (21:2) <Col>
     function create_default_slot_4(ctx) {
     	let t0;
     	let t1;
@@ -1538,40 +1592,40 @@ var app = (function () {
 
     	const node0 = new Node({
     			props: {
-    				name: "Toronto",
-    				to: "Greater Toronto",
-    				value: "3",
-    				color: "sky"
+    				name: "Downtown",
+    				to: "Toronto",
+    				value: "0.9",
+    				color: "sea"
     			},
     			$$inline: true
     		});
 
     	const node1 = new Node({
     			props: {
-    				name: "scarburough",
-    				to: "Greater Toronto",
-    				value: "0.6",
-    				color: "sky"
+    				name: "North York",
+    				to: "Toronto",
+    				value: "0.869",
+    				color: "sea"
     			},
     			$$inline: true
     		});
 
     	const node2 = new Node({
     			props: {
-    				name: "Montreal",
-    				to: "Greater Montreal",
-    				value: "1.7",
-    				color: "mud"
+    				name: "Scarborough",
+    				to: "Toronto",
+    				value: "0.6",
+    				color: "sea"
     			},
     			$$inline: true
     		});
 
     	const node3 = new Node({
     			props: {
-    				name: "Longueuil",
-    				to: "Greater Montreal",
-    				value: "2.2",
-    				color: "mud"
+    				name: "Etobicoke",
+    				to: "Toronto",
+    				value: "0.345",
+    				color: "sea"
     			},
     			$$inline: true
     		});
@@ -1627,139 +1681,15 @@ var app = (function () {
     		block,
     		id: create_default_slot_4.name,
     		type: "slot",
-    		source: "(7:2) <Col>",
+    		source: "(21:2) <Col>",
     		ctx
     	});
 
     	return block;
     }
 
-    // (13:2) <Col>
+    // (30:2) <Col>
     function create_default_slot_3(ctx) {
-    	let t0;
-    	let t1;
-    	let t2;
-    	let t3;
-    	let current;
-
-    	const node0 = new Node({
-    			props: {
-    				name: "Greater Toronto",
-    				to: "Ontario",
-    				value: "6",
-    				color: "sky"
-    			},
-    			$$inline: true
-    		});
-
-    	const node1 = new Node({
-    			props: {
-    				name: "Ottawa",
-    				to: "Ontario",
-    				value: "1",
-    				color: "sky"
-    			},
-    			$$inline: true
-    		});
-
-    	const node2 = new Node({
-    			props: {
-    				name: "Greater Montreal",
-    				to: "Quebec",
-    				value: "4",
-    				color: "mud"
-    			},
-    			$$inline: true
-    		});
-
-    	const node3 = new Node({
-    			props: {
-    				name: "Vancouver",
-    				to: "B.C.",
-    				value: "2.4",
-    				color: "burn"
-    			},
-    			$$inline: true
-    		});
-
-    	const node4 = new Node({
-    			props: {
-    				name: "Calgary",
-    				to: "Alberta",
-    				value: "1.3",
-    				color: "greygreen"
-    			},
-    			$$inline: true
-    		});
-
-    	const block = {
-    		c: function create() {
-    			create_component(node0.$$.fragment);
-    			t0 = space();
-    			create_component(node1.$$.fragment);
-    			t1 = space();
-    			create_component(node2.$$.fragment);
-    			t2 = space();
-    			create_component(node3.$$.fragment);
-    			t3 = space();
-    			create_component(node4.$$.fragment);
-    		},
-    		m: function mount(target, anchor) {
-    			mount_component(node0, target, anchor);
-    			insert_dev(target, t0, anchor);
-    			mount_component(node1, target, anchor);
-    			insert_dev(target, t1, anchor);
-    			mount_component(node2, target, anchor);
-    			insert_dev(target, t2, anchor);
-    			mount_component(node3, target, anchor);
-    			insert_dev(target, t3, anchor);
-    			mount_component(node4, target, anchor);
-    			current = true;
-    		},
-    		p: noop,
-    		i: function intro(local) {
-    			if (current) return;
-    			transition_in(node0.$$.fragment, local);
-    			transition_in(node1.$$.fragment, local);
-    			transition_in(node2.$$.fragment, local);
-    			transition_in(node3.$$.fragment, local);
-    			transition_in(node4.$$.fragment, local);
-    			current = true;
-    		},
-    		o: function outro(local) {
-    			transition_out(node0.$$.fragment, local);
-    			transition_out(node1.$$.fragment, local);
-    			transition_out(node2.$$.fragment, local);
-    			transition_out(node3.$$.fragment, local);
-    			transition_out(node4.$$.fragment, local);
-    			current = false;
-    		},
-    		d: function destroy(detaching) {
-    			destroy_component(node0, detaching);
-    			if (detaching) detach_dev(t0);
-    			destroy_component(node1, detaching);
-    			if (detaching) detach_dev(t1);
-    			destroy_component(node2, detaching);
-    			if (detaching) detach_dev(t2);
-    			destroy_component(node3, detaching);
-    			if (detaching) detach_dev(t3);
-    			destroy_component(node4, detaching);
-    		}
-    	};
-
-    	dispatch_dev("SvelteRegisterBlock", {
-    		block,
-    		id: create_default_slot_3.name,
-    		type: "slot",
-    		source: "(13:2) <Col>",
-    		ctx
-    	});
-
-    	return block;
-    }
-
-    // (20:2) <Col>
-    function create_default_slot_2(ctx) {
     	let t0;
     	let t1;
     	let t2;
@@ -1771,84 +1701,80 @@ var app = (function () {
 
     	const node0 = new Node({
     			props: {
-    				name: "Ontario",
-    				to: "Canada",
-    				value: "14",
-    				color: "sky",
-    				col: 1
+    				name: "Toronto",
+    				to: "Greater Toronto",
+    				value: "2.7",
+    				color: "sea"
     			},
     			$$inline: true
     		});
 
     	const node1 = new Node({
     			props: {
-    				name: "Quebec",
-    				to: "Canada",
-    				value: "8",
-    				color: "mud",
-    				col: 1
+    				name: "Missisauga",
+    				to: "Greater Toronto",
+    				value: "0.828",
+    				color: "mud"
     			},
     			$$inline: true
     		});
 
     	const node2 = new Node({
     			props: {
-    				name: "B.C.",
-    				to: "Canada",
-    				value: "5",
-    				color: "burn",
-    				col: 1
+    				name: "Brampton",
+    				to: "Greater Toronto",
+    				value: "0.6",
+    				color: "mud"
     			},
     			$$inline: true
     		});
 
     	const node3 = new Node({
     			props: {
-    				name: "Alberta",
-    				to: "Canada",
-    				value: "4",
-    				col: 1,
-    				color: "greygreen"
+    				name: "Oakville",
+    				to: "Greater Toronto",
+    				value: "0.2",
+    				color: "mud"
     			},
     			$$inline: true
     		});
 
     	const node4 = new Node({
     			props: {
-    				name: "Nova Scota",
-    				to: "Canada",
-    				value: "1",
-    				col: 1
+    				name: "Markham",
+    				to: "Greater Toronto",
+    				value: "0.301",
+    				color: "mud"
     			},
     			$$inline: true
     		});
 
     	const node5 = new Node({
     			props: {
-    				name: "Manitoba",
-    				to: "Canada",
-    				value: "1",
-    				col: 1
+    				name: "Vaughn",
+    				to: "Greater Toronto",
+    				value: "0.288",
+    				color: "mud"
     			},
     			$$inline: true
     		});
 
     	const node6 = new Node({
     			props: {
-    				name: "Saskatchewan",
-    				to: "Canada",
-    				value: "1",
-    				col: 1
+    				name: "Richmond Hill",
+    				to: "Greater Toronto",
+    				value: "0.185",
+    				color: "mud"
     			},
     			$$inline: true
     		});
 
     	const node7 = new Node({
     			props: {
-    				name: "rest",
-    				to: "Canada",
-    				value: 1,
-    				col: 1
+    				name: "Burlington",
+    				to: "Greater Toronto",
+    				value: "0.175",
+    				color: "mud"
     			},
     			$$inline: true
     		});
@@ -1934,21 +1860,245 @@ var app = (function () {
 
     	dispatch_dev("SvelteRegisterBlock", {
     		block,
-    		id: create_default_slot_2.name,
+    		id: create_default_slot_3.name,
     		type: "slot",
-    		source: "(20:2) <Col>",
+    		source: "(30:2) <Col>",
     		ctx
     	});
 
     	return block;
     }
 
-    // (31:2) <Col>
+    // (44:2) <Col>
+    function create_default_slot_2(ctx) {
+    	let t0;
+    	let t1;
+    	let t2;
+    	let t3;
+    	let t4;
+    	let t5;
+    	let t6;
+    	let t7;
+    	let t8;
+    	let current;
+
+    	const node0 = new Node({
+    			props: {
+    				name: "Greater Toronto",
+    				to: "Ontario",
+    				value: "6",
+    				color: "sky"
+    			},
+    			$$inline: true
+    		});
+
+    	const node1 = new Node({
+    			props: {
+    				name: "Hamilton",
+    				to: "Ontario",
+    				value: "0.53",
+    				color: "mud"
+    			},
+    			$$inline: true
+    		});
+
+    	const node2 = new Node({
+    			props: {
+    				name: "Kitchener",
+    				to: "Ontario",
+    				value: "0.2",
+    				color: "mud"
+    			},
+    			$$inline: true
+    		});
+
+    	const node3 = new Node({
+    			props: {
+    				name: "London",
+    				to: "Ontario",
+    				value: "0.366",
+    				color: "mud"
+    			},
+    			$$inline: true
+    		});
+
+    	const node4 = new Node({
+    			props: {
+    				name: "Oshawa",
+    				to: "Ontario",
+    				value: "0.159",
+    				color: "mud"
+    			},
+    			$$inline: true
+    		});
+
+    	const node5 = new Node({
+    			props: {
+    				name: "St. Catharines",
+    				to: "Ontario",
+    				value: "0.13",
+    				color: "mud"
+    			},
+    			$$inline: true
+    		});
+
+    	const node6 = new Node({
+    			props: {
+    				name: "Sudbury",
+    				to: "Ontario",
+    				value: "0.161",
+    				color: "mud"
+    			},
+    			$$inline: true
+    		});
+
+    	const node7 = new Node({
+    			props: {
+    				name: "Barrie",
+    				to: "Ontario",
+    				value: "0.14",
+    				color: "mud"
+    			},
+    			$$inline: true
+    		});
+
+    	const node8 = new Node({
+    			props: {
+    				name: "Ottawa",
+    				to: "Ontario",
+    				value: "0.9",
+    				color: "red"
+    			},
+    			$$inline: true
+    		});
+
+    	const node9 = new Node({
+    			props: {
+    				name: "Windsor",
+    				to: "Ontario",
+    				value: "0.21",
+    				color: "mud"
+    			},
+    			$$inline: true
+    		});
+
+    	const block = {
+    		c: function create() {
+    			create_component(node0.$$.fragment);
+    			t0 = space();
+    			create_component(node1.$$.fragment);
+    			t1 = space();
+    			create_component(node2.$$.fragment);
+    			t2 = space();
+    			create_component(node3.$$.fragment);
+    			t3 = space();
+    			create_component(node4.$$.fragment);
+    			t4 = space();
+    			create_component(node5.$$.fragment);
+    			t5 = space();
+    			create_component(node6.$$.fragment);
+    			t6 = space();
+    			create_component(node7.$$.fragment);
+    			t7 = space();
+    			create_component(node8.$$.fragment);
+    			t8 = space();
+    			create_component(node9.$$.fragment);
+    		},
+    		m: function mount(target, anchor) {
+    			mount_component(node0, target, anchor);
+    			insert_dev(target, t0, anchor);
+    			mount_component(node1, target, anchor);
+    			insert_dev(target, t1, anchor);
+    			mount_component(node2, target, anchor);
+    			insert_dev(target, t2, anchor);
+    			mount_component(node3, target, anchor);
+    			insert_dev(target, t3, anchor);
+    			mount_component(node4, target, anchor);
+    			insert_dev(target, t4, anchor);
+    			mount_component(node5, target, anchor);
+    			insert_dev(target, t5, anchor);
+    			mount_component(node6, target, anchor);
+    			insert_dev(target, t6, anchor);
+    			mount_component(node7, target, anchor);
+    			insert_dev(target, t7, anchor);
+    			mount_component(node8, target, anchor);
+    			insert_dev(target, t8, anchor);
+    			mount_component(node9, target, anchor);
+    			current = true;
+    		},
+    		p: noop,
+    		i: function intro(local) {
+    			if (current) return;
+    			transition_in(node0.$$.fragment, local);
+    			transition_in(node1.$$.fragment, local);
+    			transition_in(node2.$$.fragment, local);
+    			transition_in(node3.$$.fragment, local);
+    			transition_in(node4.$$.fragment, local);
+    			transition_in(node5.$$.fragment, local);
+    			transition_in(node6.$$.fragment, local);
+    			transition_in(node7.$$.fragment, local);
+    			transition_in(node8.$$.fragment, local);
+    			transition_in(node9.$$.fragment, local);
+    			current = true;
+    		},
+    		o: function outro(local) {
+    			transition_out(node0.$$.fragment, local);
+    			transition_out(node1.$$.fragment, local);
+    			transition_out(node2.$$.fragment, local);
+    			transition_out(node3.$$.fragment, local);
+    			transition_out(node4.$$.fragment, local);
+    			transition_out(node5.$$.fragment, local);
+    			transition_out(node6.$$.fragment, local);
+    			transition_out(node7.$$.fragment, local);
+    			transition_out(node8.$$.fragment, local);
+    			transition_out(node9.$$.fragment, local);
+    			current = false;
+    		},
+    		d: function destroy(detaching) {
+    			destroy_component(node0, detaching);
+    			if (detaching) detach_dev(t0);
+    			destroy_component(node1, detaching);
+    			if (detaching) detach_dev(t1);
+    			destroy_component(node2, detaching);
+    			if (detaching) detach_dev(t2);
+    			destroy_component(node3, detaching);
+    			if (detaching) detach_dev(t3);
+    			destroy_component(node4, detaching);
+    			if (detaching) detach_dev(t4);
+    			destroy_component(node5, detaching);
+    			if (detaching) detach_dev(t5);
+    			destroy_component(node6, detaching);
+    			if (detaching) detach_dev(t6);
+    			destroy_component(node7, detaching);
+    			if (detaching) detach_dev(t7);
+    			destroy_component(node8, detaching);
+    			if (detaching) detach_dev(t8);
+    			destroy_component(node9, detaching);
+    		}
+    	};
+
+    	dispatch_dev("SvelteRegisterBlock", {
+    		block,
+    		id: create_default_slot_2.name,
+    		type: "slot",
+    		source: "(44:2) <Col>",
+    		ctx
+    	});
+
+    	return block;
+    }
+
+    // (56:2) <Col>
     function create_default_slot_1(ctx) {
     	let current;
 
     	const node = new Node({
-    			props: { name: "Canada", color: "red", dy: "20" },
+    			props: {
+    				name: "Ontario",
+    				to: "Canada",
+    				value: "14",
+    				color: "blue"
+    			},
     			$$inline: true
     		});
 
@@ -1979,14 +2129,14 @@ var app = (function () {
     		block,
     		id: create_default_slot_1.name,
     		type: "slot",
-    		source: "(31:2) <Col>",
+    		source: "(56:2) <Col>",
     		ctx
     	});
 
     	return block;
     }
 
-    // (5:0) <Sankey height="800">
+    // (18:0) <Sankey height="1200" {fmt}>
     function create_default_slot(ctx) {
     	let t0;
     	let t1;
@@ -2048,28 +2198,28 @@ var app = (function () {
     		p: function update(ctx, dirty) {
     			const col0_changes = {};
 
-    			if (dirty & /*$$scope*/ 1) {
+    			if (dirty & /*$$scope*/ 2) {
     				col0_changes.$$scope = { dirty, ctx };
     			}
 
     			col0.$set(col0_changes);
     			const col1_changes = {};
 
-    			if (dirty & /*$$scope*/ 1) {
+    			if (dirty & /*$$scope*/ 2) {
     				col1_changes.$$scope = { dirty, ctx };
     			}
 
     			col1.$set(col1_changes);
     			const col2_changes = {};
 
-    			if (dirty & /*$$scope*/ 1) {
+    			if (dirty & /*$$scope*/ 2) {
     				col2_changes.$$scope = { dirty, ctx };
     			}
 
     			col2.$set(col2_changes);
     			const col3_changes = {};
 
-    			if (dirty & /*$$scope*/ 1) {
+    			if (dirty & /*$$scope*/ 2) {
     				col3_changes.$$scope = { dirty, ctx };
     			}
 
@@ -2105,7 +2255,7 @@ var app = (function () {
     		block,
     		id: create_default_slot.name,
     		type: "slot",
-    		source: "(5:0) <Sankey height=\\\"800\\\">",
+    		source: "(18:0) <Sankey height=\\\"1200\\\" {fmt}>",
     		ctx
     	});
 
@@ -2117,7 +2267,8 @@ var app = (function () {
 
     	const sankey = new Sankey({
     			props: {
-    				height: "800",
+    				height: "1200",
+    				fmt: /*fmt*/ ctx[0],
     				$$slots: { default: [create_default_slot] },
     				$$scope: { ctx }
     			},
@@ -2138,7 +2289,7 @@ var app = (function () {
     		p: function update(ctx, [dirty]) {
     			const sankey_changes = {};
 
-    			if (dirty & /*$$scope*/ 1) {
+    			if (dirty & /*$$scope*/ 2) {
     				sankey_changes.$$scope = { dirty, ctx };
     			}
 
@@ -2170,6 +2321,23 @@ var app = (function () {
     }
 
     function instance$3($$self, $$props, $$invalidate) {
+    	let fmt = num => {
+    		num = Number(num) * 1000000;
+
+    		if (num >= 1000000) {
+    			num = Math.round(num / 100000) * 100000;
+    			num = Math.round(num);
+    			return String(num / 1000000) + "m";
+    		}
+
+    		if (num > 1000) {
+    			num = Math.round(num / 10000) * 10000;
+    			return String(num / 1000) + "k";
+    		}
+
+    		return num;
+    	};
+
     	const writable_props = [];
 
     	Object.keys($$props).forEach(key => {
@@ -2178,8 +2346,17 @@ var app = (function () {
 
     	let { $$slots = {}, $$scope } = $$props;
     	validate_slots("Demo", $$slots, []);
-    	$$self.$capture_state = () => ({ Sankey, Node, Col });
-    	return [];
+    	$$self.$capture_state = () => ({ Sankey, Node, Col, fmt });
+
+    	$$self.$inject_state = $$props => {
+    		if ("fmt" in $$props) $$invalidate(0, fmt = $$props.fmt);
+    	};
+
+    	if ($$props && "$$inject" in $$props) {
+    		$$self.$inject_state($$props.$$inject);
+    	}
+
+    	return [fmt];
     }
 
     class Demo extends SvelteComponentDev {

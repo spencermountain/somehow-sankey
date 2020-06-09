@@ -16,14 +16,14 @@ let toFlat = function (byCol) {
   return list
 }
 
-const layout = function (items, width, height) {
+const layout = function (items, width, height, nodeWidth) {
   let byCol = fmtByCol(items)
   // add value
   byCol = getValue(byCol)
   // add top
   byCol = getTops(byCol)
   // add x, y, width, height
-  byCol = makePoints(byCol, width, height)
+  byCol = makePoints(byCol, width, height, nodeWidth)
 
   let nodes = toFlat(byCol)
   let paths = makePaths(nodes)
@@ -31,7 +31,7 @@ const layout = function (items, width, height) {
   return {
     nodes: nodes,
     paths: paths,
-    nodeWidth: 50,
+    nodeWidth: nodeWidth,
   }
 }
 export default layout
