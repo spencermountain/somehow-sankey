@@ -2,6 +2,11 @@
   import { Sankey, Node, Col } from './src'
   let fmt = num => {
     num = Number(num) * 1000000
+    if (num >= 1000000000) {
+      num = Math.round(num / 100000000) * 100000000
+      num = Math.round(num)
+      return String(num / 1000000000) + 'b'
+    }
     if (num >= 1000000) {
       num = Math.round(num / 100000) * 100000
       num = Math.round(num)
@@ -15,45 +20,35 @@
   }
 </script>
 
-<Sankey height="1200" {fmt}>
-  <!-- https://en.wikipedia.org/wiki/List_of_cities_in_Canada -->
-  <!-- https://en.wikipedia.org/wiki/Golden_Horseshoe -->
-  <Col>
-    <Node name="Downtown" to="Toronto" value="0.9" color="sea" />
-    <Node name="North York" to="Toronto" value="0.869" color="sea" />
-    <Node name="Scarborough" to="Toronto" value="0.6" color="sea" />
-    <Node name="Etobicoke" to="Toronto" value="0.345" color="sea" />
-    <!-- <Node name="York" to="Toronto" value="0.145" color="sea" /> -->
-    <!-- <Node name="East York" to="Toronto" value="0.118" color="sea" /> -->
+<style>
+  .m3 {
+    margin: 3rem;
+  }
+</style>
 
-  </Col>
-  <Col>
-    <Node name="Toronto" to="Greater Toronto" value="2.7" color="sea" />
-    <Node name="Missisauga" to="Greater Toronto" value="0.828" color="mud" />
-    <Node name="Brampton" to="Greater Toronto" value="0.6" color="mud" />
-    <Node name="Oakville" to="Greater Toronto" value="0.2" color="mud" />
-    <Node name="Markham" to="Greater Toronto" value="0.301" color="mud" />
-    <Node name="Vaughn" to="Greater Toronto" value="0.288" color="mud" />
-    <Node name="Richmond Hill" to="Greater Toronto" value="0.185" color="mud" />
-    <Node name="Burlington" to="Greater Toronto" value="0.175" color="mud" />
-    <!-- <Node name="Peel" to="Greater Toronto" value="1.3" color="burn" /> -->
-    <!-- <Node name="Halton" to="Greater Toronto" value="0.5" color="mud" /> -->
-    <!-- <Node name="Durham" to="Greater Toronto" value="0.6" color="slate" /> -->
+<div>
+  <div class="m3">
+    <b>Toronto City Budget</b>
+    <br />
+    in 2019
+  </div>
 
-  </Col>
-  <Col>
-    <Node name="Greater Toronto" to="Ontario" value="6" color="sky" />
-    <Node name="Hamilton" to="Ontario" value="0.53" color="mud" />
-    <Node name="Kitchener" to="Ontario" value="0.2" color="mud" />
-    <Node name="London" to="Ontario" value="0.366" color="mud" />
-    <Node name="Oshawa" to="Ontario" value="0.159" color="mud" />
-    <Node name="St. Catharines" to="Ontario" value="0.13" color="mud" />
-    <Node name="Sudbury" to="Ontario" value="0.161" color="mud" />
-    <Node name="Barrie" to="Ontario" value="0.14" color="mud" />
-    <Node name="Ottawa" to="Ontario" value="0.9" color="red" />
-    <Node name="Windsor" to="Ontario" value="0.21" color="mud" />
-  </Col>
-  <Col>
-    <Node name="Ontario" to="Canada" value="14" color="blue" />
-  </Col>
-</Sankey>
+  <Sankey height="800" {fmt}>
+    <Col>
+      <Node name="Property Taxes" to="Toronto" value="3950" color="sea" />
+      <Node name="Land-transfer" to="Toronto" value="532" color="sea" />
+      <Node name="Fees" to="Toronto" value="1870" color="sky" />
+      <Node name="Province" to="Toronto" value="1930" color="red" />
+    </Col>
+    <Col>
+      <Node name="Toronto" value="11700" color="blue" />
+    </Col>
+    <Col>
+      <Node name="Police" from="Toronto" value="1130" color="sea" />
+      <Node name="TTC" from="Toronto" value="1975" color="#6E9588" />
+      <Node name="Fire" from="Toronto" value="479" color="red" />
+    </Col>
+
+  </Sankey>
+
+</div>

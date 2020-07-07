@@ -3,12 +3,17 @@ const addLinks = function (byCol) {
   byCol.forEach((nodes, i) => {
     nodes.forEach((node) => {
       if (node.to && byCol[i + 1]) {
-        let found = byCol[i + 1].find((n) => n.name === node.to)
-
-        if (found) {
-          node.tos.push(found)
-          found.froms.push(node)
+        let foundTo = byCol[i + 1].find((n) => n.name === node.to)
+        if (foundTo) {
+          node.tos.push(foundTo)
+          foundTo.froms.push(node)
         }
+      }
+      // allow backward-set links, too
+      if (node.from && byCol[i - 1]) {
+        let found = byCol[i - 1].find((n) => n.name === node.from)
+        // found.tos.push(node)
+        // node.froms.push(found)
       }
     })
   })

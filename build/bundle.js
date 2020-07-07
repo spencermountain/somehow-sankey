@@ -414,12 +414,17 @@ var app = (function () {
       byCol.forEach((nodes, i) => {
         nodes.forEach((node) => {
           if (node.to && byCol[i + 1]) {
-            let found = byCol[i + 1].find((n) => n.name === node.to);
-
-            if (found) {
-              node.tos.push(found);
-              found.froms.push(node);
+            let foundTo = byCol[i + 1].find((n) => n.name === node.to);
+            if (foundTo) {
+              node.tos.push(foundTo);
+              foundTo.froms.push(node);
             }
+          }
+          // allow backward-set links, too
+          if (node.from && byCol[i - 1]) {
+            let found = byCol[i - 1].find((n) => n.name === node.from);
+            // found.tos.push(node)
+            // node.froms.push(found)
           }
         });
       });
@@ -641,8 +646,37 @@ var app = (function () {
       return ` L${to[0]},${to[1]}`
       // return ` S${from[0] + 50},${from[1] - 15}   ${to[0]},${to[1]}`
     };
+
+    const makePath = function (from, to) {
+      let already = from.alreadyFrom;
+      let path = `M${from.x + from.width},${from.y + already}`; // (source-top)
+      // dest-top
+      path += ` L${to.x},${to.y}`;
+      // dest-bottom
+      path += ` L${to.x},${to.y + to.height}`;
+      // source-bottom
+      path += ` L${from.x + from.width},${to.height + already}`;
+      path += ` Z`;
+      return path
+    };
+
+    const backwardPaths = function (nodes) {
+      let paths = [];
+      nodes.forEach((to) => {
+        if (to.from) {
+          let source = nodes.find((n) => n.name === to.from);
+          source.alreadyFrom = source.alreadyFrom || 0;
+          let path = makePath(source, to);
+          source.alreadyFrom += to.height;
+          paths.push(path);
+        }
+      });
+      return paths
+    };
+
     const makePaths = function (nodes) {
       let paths = [];
+      console.log(nodes[4]);
       nodes.forEach((node) => {
         let fromX = node.x + node.width;
         let fromY = node.y;
@@ -664,6 +698,8 @@ var app = (function () {
           paths.push(d);
         });
       });
+      let backward = backwardPaths(nodes);
+      paths = paths.concat(backward);
       return paths
     };
     var _05MakePaths = makePaths;
@@ -1295,8 +1331,9 @@ var app = (function () {
     function instance$1($$self, $$props, $$invalidate) {
     	let $colCount;
     	validate_store(colCount, "colCount");
-    	component_subscribe($$self, colCount, $$value => $$invalidate(8, $colCount = $$value));
+    	component_subscribe($$self, colCount, $$value => $$invalidate(9, $colCount = $$value));
     	let { value = null } = $$props;
+    	let { from = null } = $$props;
     	let { name = "" } = $$props;
     	let { to = "" } = $$props;
     	let { color = "steelblue" } = $$props;
@@ -1313,6 +1350,7 @@ var app = (function () {
     		name,
     		to,
     		value: Number(value),
+    		from,
     		dy: Number(dy),
     		dx: Number(dx),
     		color,
@@ -1326,7 +1364,7 @@ var app = (function () {
     		return arr;
     	});
 
-    	const writable_props = ["value", "name", "to", "color", "accent", "dy", "dx", "opacity"];
+    	const writable_props = ["value", "from", "name", "to", "color", "accent", "dy", "dx", "opacity"];
 
     	Object.keys($$props).forEach(key => {
     		if (!~writable_props.indexOf(key) && key.slice(0, 2) !== "$$") console.warn(`<Node> was created with unknown prop '${key}'`);
@@ -1337,13 +1375,14 @@ var app = (function () {
 
     	$$self.$set = $$props => {
     		if ("value" in $$props) $$invalidate(0, value = $$props.value);
-    		if ("name" in $$props) $$invalidate(1, name = $$props.name);
-    		if ("to" in $$props) $$invalidate(2, to = $$props.to);
-    		if ("color" in $$props) $$invalidate(3, color = $$props.color);
-    		if ("accent" in $$props) $$invalidate(4, accent = $$props.accent);
-    		if ("dy" in $$props) $$invalidate(5, dy = $$props.dy);
-    		if ("dx" in $$props) $$invalidate(6, dx = $$props.dx);
-    		if ("opacity" in $$props) $$invalidate(7, opacity = $$props.opacity);
+    		if ("from" in $$props) $$invalidate(1, from = $$props.from);
+    		if ("name" in $$props) $$invalidate(2, name = $$props.name);
+    		if ("to" in $$props) $$invalidate(3, to = $$props.to);
+    		if ("color" in $$props) $$invalidate(4, color = $$props.color);
+    		if ("accent" in $$props) $$invalidate(5, accent = $$props.accent);
+    		if ("dy" in $$props) $$invalidate(6, dy = $$props.dy);
+    		if ("dx" in $$props) $$invalidate(7, dx = $$props.dx);
+    		if ("opacity" in $$props) $$invalidate(8, opacity = $$props.opacity);
     	};
 
     	$$self.$capture_state = () => ({
@@ -1351,6 +1390,7 @@ var app = (function () {
     		items,
     		colCount,
     		value,
+    		from,
     		name,
     		to,
     		color,
@@ -1364,13 +1404,14 @@ var app = (function () {
 
     	$$self.$inject_state = $$props => {
     		if ("value" in $$props) $$invalidate(0, value = $$props.value);
-    		if ("name" in $$props) $$invalidate(1, name = $$props.name);
-    		if ("to" in $$props) $$invalidate(2, to = $$props.to);
-    		if ("color" in $$props) $$invalidate(3, color = $$props.color);
-    		if ("accent" in $$props) $$invalidate(4, accent = $$props.accent);
-    		if ("dy" in $$props) $$invalidate(5, dy = $$props.dy);
-    		if ("dx" in $$props) $$invalidate(6, dx = $$props.dx);
-    		if ("opacity" in $$props) $$invalidate(7, opacity = $$props.opacity);
+    		if ("from" in $$props) $$invalidate(1, from = $$props.from);
+    		if ("name" in $$props) $$invalidate(2, name = $$props.name);
+    		if ("to" in $$props) $$invalidate(3, to = $$props.to);
+    		if ("color" in $$props) $$invalidate(4, color = $$props.color);
+    		if ("accent" in $$props) $$invalidate(5, accent = $$props.accent);
+    		if ("dy" in $$props) $$invalidate(6, dy = $$props.dy);
+    		if ("dx" in $$props) $$invalidate(7, dx = $$props.dx);
+    		if ("opacity" in $$props) $$invalidate(8, opacity = $$props.opacity);
     		if ("row" in $$props) row = $$props.row;
     	};
 
@@ -1378,7 +1419,7 @@ var app = (function () {
     		$$self.$inject_state($$props.$$inject);
     	}
 
-    	return [value, name, to, color, accent, dy, dx, opacity];
+    	return [value, from, name, to, color, accent, dy, dx, opacity];
     }
 
     class Node extends SvelteComponentDev {
@@ -1387,13 +1428,14 @@ var app = (function () {
 
     		init(this, options, instance$1, create_fragment$1, safe_not_equal, {
     			value: 0,
-    			name: 1,
-    			to: 2,
-    			color: 3,
-    			accent: 4,
-    			dy: 5,
-    			dx: 6,
-    			opacity: 7
+    			from: 1,
+    			name: 2,
+    			to: 3,
+    			color: 4,
+    			accent: 5,
+    			dy: 6,
+    			dx: 7,
+    			opacity: 8
     		});
 
     		dispatch_dev("SvelteRegisterComponent", {
@@ -1409,6 +1451,14 @@ var app = (function () {
     	}
 
     	set value(value) {
+    		throw new Error("<Node>: Props cannot be set directly on the component instance unless compiling with 'accessors: true' or '<svelte:options accessors/>'");
+    	}
+
+    	get from() {
+    		throw new Error("<Node>: Props cannot be read directly from the component instance unless compiling with 'accessors: true' or '<svelte:options accessors/>'");
+    	}
+
+    	set from(value) {
     		throw new Error("<Node>: Props cannot be set directly on the component instance unless compiling with 'accessors: true' or '<svelte:options accessors/>'");
     	}
 
@@ -1582,128 +1632,27 @@ var app = (function () {
     }
 
     /* Demo.svelte generated by Svelte v3.22.2 */
+    const file$2 = "Demo.svelte";
 
-    // (21:2) <Col>
-    function create_default_slot_4(ctx) {
-    	let t0;
-    	let t1;
-    	let t2;
-    	let current;
-
-    	const node0 = new Node({
-    			props: {
-    				name: "Downtown",
-    				to: "Toronto",
-    				value: "0.9",
-    				color: "sea"
-    			},
-    			$$inline: true
-    		});
-
-    	const node1 = new Node({
-    			props: {
-    				name: "North York",
-    				to: "Toronto",
-    				value: "0.869",
-    				color: "sea"
-    			},
-    			$$inline: true
-    		});
-
-    	const node2 = new Node({
-    			props: {
-    				name: "Scarborough",
-    				to: "Toronto",
-    				value: "0.6",
-    				color: "sea"
-    			},
-    			$$inline: true
-    		});
-
-    	const node3 = new Node({
-    			props: {
-    				name: "Etobicoke",
-    				to: "Toronto",
-    				value: "0.345",
-    				color: "sea"
-    			},
-    			$$inline: true
-    		});
-
-    	const block = {
-    		c: function create() {
-    			create_component(node0.$$.fragment);
-    			t0 = space();
-    			create_component(node1.$$.fragment);
-    			t1 = space();
-    			create_component(node2.$$.fragment);
-    			t2 = space();
-    			create_component(node3.$$.fragment);
-    		},
-    		m: function mount(target, anchor) {
-    			mount_component(node0, target, anchor);
-    			insert_dev(target, t0, anchor);
-    			mount_component(node1, target, anchor);
-    			insert_dev(target, t1, anchor);
-    			mount_component(node2, target, anchor);
-    			insert_dev(target, t2, anchor);
-    			mount_component(node3, target, anchor);
-    			current = true;
-    		},
-    		p: noop,
-    		i: function intro(local) {
-    			if (current) return;
-    			transition_in(node0.$$.fragment, local);
-    			transition_in(node1.$$.fragment, local);
-    			transition_in(node2.$$.fragment, local);
-    			transition_in(node3.$$.fragment, local);
-    			current = true;
-    		},
-    		o: function outro(local) {
-    			transition_out(node0.$$.fragment, local);
-    			transition_out(node1.$$.fragment, local);
-    			transition_out(node2.$$.fragment, local);
-    			transition_out(node3.$$.fragment, local);
-    			current = false;
-    		},
-    		d: function destroy(detaching) {
-    			destroy_component(node0, detaching);
-    			if (detaching) detach_dev(t0);
-    			destroy_component(node1, detaching);
-    			if (detaching) detach_dev(t1);
-    			destroy_component(node2, detaching);
-    			if (detaching) detach_dev(t2);
-    			destroy_component(node3, detaching);
-    		}
-    	};
-
-    	dispatch_dev("SvelteRegisterBlock", {
-    		block,
-    		id: create_default_slot_4.name,
-    		type: "slot",
-    		source: "(21:2) <Col>",
-    		ctx
-    	});
-
-    	return block;
+    function add_css$1() {
+    	var style = element("style");
+    	style.id = "svelte-1o2k1lr-style";
+    	style.textContent = ".m3.svelte-1o2k1lr{margin:3rem}\n/*# sourceMappingURL=data:application/json;charset=utf-8;base64,eyJ2ZXJzaW9uIjozLCJmaWxlIjoiRGVtby5zdmVsdGUiLCJzb3VyY2VzIjpbIkRlbW8uc3ZlbHRlIl0sInNvdXJjZXNDb250ZW50IjpbIjxzY3JpcHQ+XG4gIGltcG9ydCB7IFNhbmtleSwgTm9kZSwgQ29sIH0gZnJvbSAnLi9zcmMnXG4gIGxldCBmbXQgPSBudW0gPT4ge1xuICAgIG51bSA9IE51bWJlcihudW0pICogMTAwMDAwMFxuICAgIGlmIChudW0gPj0gMTAwMDAwMDAwMCkge1xuICAgICAgbnVtID0gTWF0aC5yb3VuZChudW0gLyAxMDAwMDAwMDApICogMTAwMDAwMDAwXG4gICAgICBudW0gPSBNYXRoLnJvdW5kKG51bSlcbiAgICAgIHJldHVybiBTdHJpbmcobnVtIC8gMTAwMDAwMDAwMCkgKyAnYidcbiAgICB9XG4gICAgaWYgKG51bSA+PSAxMDAwMDAwKSB7XG4gICAgICBudW0gPSBNYXRoLnJvdW5kKG51bSAvIDEwMDAwMCkgKiAxMDAwMDBcbiAgICAgIG51bSA9IE1hdGgucm91bmQobnVtKVxuICAgICAgcmV0dXJuIFN0cmluZyhudW0gLyAxMDAwMDAwKSArICdtJ1xuICAgIH1cbiAgICBpZiAobnVtID4gMTAwMCkge1xuICAgICAgbnVtID0gTWF0aC5yb3VuZChudW0gLyAxMDAwMCkgKiAxMDAwMFxuICAgICAgcmV0dXJuIFN0cmluZyhudW0gLyAxMDAwKSArICdrJ1xuICAgIH1cbiAgICByZXR1cm4gbnVtXG4gIH1cbjwvc2NyaXB0PlxuXG48c3R5bGU+XG4gIC5tMyB7XG4gICAgbWFyZ2luOiAzcmVtO1xuICB9XG48L3N0eWxlPlxuXG48ZGl2PlxuICA8ZGl2IGNsYXNzPVwibTNcIj5cbiAgICA8Yj5Ub3JvbnRvIENpdHkgQnVkZ2V0PC9iPlxuICAgIDxiciAvPlxuICAgIGluIDIwMTlcbiAgPC9kaXY+XG5cbiAgPFNhbmtleSBoZWlnaHQ9XCI4MDBcIiB7Zm10fT5cbiAgICA8Q29sPlxuICAgICAgPE5vZGUgbmFtZT1cIlByb3BlcnR5IFRheGVzXCIgdG89XCJUb3JvbnRvXCIgdmFsdWU9XCIzOTUwXCIgY29sb3I9XCJzZWFcIiAvPlxuICAgICAgPE5vZGUgbmFtZT1cIkxhbmQtdHJhbnNmZXJcIiB0bz1cIlRvcm9udG9cIiB2YWx1ZT1cIjUzMlwiIGNvbG9yPVwic2VhXCIgLz5cbiAgICAgIDxOb2RlIG5hbWU9XCJGZWVzXCIgdG89XCJUb3JvbnRvXCIgdmFsdWU9XCIxODcwXCIgY29sb3I9XCJza3lcIiAvPlxuICAgICAgPE5vZGUgbmFtZT1cIlByb3ZpbmNlXCIgdG89XCJUb3JvbnRvXCIgdmFsdWU9XCIxOTMwXCIgY29sb3I9XCJyZWRcIiAvPlxuICAgIDwvQ29sPlxuICAgIDxDb2w+XG4gICAgICA8Tm9kZSBuYW1lPVwiVG9yb250b1wiIHZhbHVlPVwiMTE3MDBcIiBjb2xvcj1cImJsdWVcIiAvPlxuICAgIDwvQ29sPlxuICAgIDxDb2w+XG4gICAgICA8Tm9kZSBuYW1lPVwiUG9saWNlXCIgZnJvbT1cIlRvcm9udG9cIiB2YWx1ZT1cIjExMzBcIiBjb2xvcj1cInNlYVwiIC8+XG4gICAgICA8Tm9kZSBuYW1lPVwiVFRDXCIgZnJvbT1cIlRvcm9udG9cIiB2YWx1ZT1cIjE5NzVcIiBjb2xvcj1cIiM2RTk1ODhcIiAvPlxuICAgICAgPE5vZGUgbmFtZT1cIkZpcmVcIiBmcm9tPVwiVG9yb250b1wiIHZhbHVlPVwiNDc5XCIgY29sb3I9XCJyZWRcIiAvPlxuICAgIDwvQ29sPlxuXG4gIDwvU2Fua2V5PlxuXG48L2Rpdj5cbiJdLCJuYW1lcyI6W10sIm1hcHBpbmdzIjoiQUF1QkUsR0FBRyxlQUFDLENBQUMsQUFDSCxNQUFNLENBQUUsSUFBSSxBQUNkLENBQUMifQ== */";
+    	append_dev(document.head, style);
     }
 
-    // (30:2) <Col>
+    // (37:4) <Col>
     function create_default_slot_3(ctx) {
     	let t0;
     	let t1;
     	let t2;
-    	let t3;
-    	let t4;
-    	let t5;
-    	let t6;
     	let current;
 
     	const node0 = new Node({
     			props: {
-    				name: "Toronto",
-    				to: "Greater Toronto",
-    				value: "2.7",
+    				name: "Property Taxes",
+    				to: "Toronto",
+    				value: "3950",
     				color: "sea"
     			},
     			$$inline: true
@@ -1711,70 +1660,30 @@ var app = (function () {
 
     	const node1 = new Node({
     			props: {
-    				name: "Missisauga",
-    				to: "Greater Toronto",
-    				value: "0.828",
-    				color: "mud"
+    				name: "Land-transfer",
+    				to: "Toronto",
+    				value: "532",
+    				color: "sea"
     			},
     			$$inline: true
     		});
 
     	const node2 = new Node({
     			props: {
-    				name: "Brampton",
-    				to: "Greater Toronto",
-    				value: "0.6",
-    				color: "mud"
+    				name: "Fees",
+    				to: "Toronto",
+    				value: "1870",
+    				color: "sky"
     			},
     			$$inline: true
     		});
 
     	const node3 = new Node({
     			props: {
-    				name: "Oakville",
-    				to: "Greater Toronto",
-    				value: "0.2",
-    				color: "mud"
-    			},
-    			$$inline: true
-    		});
-
-    	const node4 = new Node({
-    			props: {
-    				name: "Markham",
-    				to: "Greater Toronto",
-    				value: "0.301",
-    				color: "mud"
-    			},
-    			$$inline: true
-    		});
-
-    	const node5 = new Node({
-    			props: {
-    				name: "Vaughn",
-    				to: "Greater Toronto",
-    				value: "0.288",
-    				color: "mud"
-    			},
-    			$$inline: true
-    		});
-
-    	const node6 = new Node({
-    			props: {
-    				name: "Richmond Hill",
-    				to: "Greater Toronto",
-    				value: "0.185",
-    				color: "mud"
-    			},
-    			$$inline: true
-    		});
-
-    	const node7 = new Node({
-    			props: {
-    				name: "Burlington",
-    				to: "Greater Toronto",
-    				value: "0.175",
-    				color: "mud"
+    				name: "Province",
+    				to: "Toronto",
+    				value: "1930",
+    				color: "red"
     			},
     			$$inline: true
     		});
@@ -1788,14 +1697,6 @@ var app = (function () {
     			create_component(node2.$$.fragment);
     			t2 = space();
     			create_component(node3.$$.fragment);
-    			t3 = space();
-    			create_component(node4.$$.fragment);
-    			t4 = space();
-    			create_component(node5.$$.fragment);
-    			t5 = space();
-    			create_component(node6.$$.fragment);
-    			t6 = space();
-    			create_component(node7.$$.fragment);
     		},
     		m: function mount(target, anchor) {
     			mount_component(node0, target, anchor);
@@ -1805,14 +1706,6 @@ var app = (function () {
     			mount_component(node2, target, anchor);
     			insert_dev(target, t2, anchor);
     			mount_component(node3, target, anchor);
-    			insert_dev(target, t3, anchor);
-    			mount_component(node4, target, anchor);
-    			insert_dev(target, t4, anchor);
-    			mount_component(node5, target, anchor);
-    			insert_dev(target, t5, anchor);
-    			mount_component(node6, target, anchor);
-    			insert_dev(target, t6, anchor);
-    			mount_component(node7, target, anchor);
     			current = true;
     		},
     		p: noop,
@@ -1822,10 +1715,6 @@ var app = (function () {
     			transition_in(node1.$$.fragment, local);
     			transition_in(node2.$$.fragment, local);
     			transition_in(node3.$$.fragment, local);
-    			transition_in(node4.$$.fragment, local);
-    			transition_in(node5.$$.fragment, local);
-    			transition_in(node6.$$.fragment, local);
-    			transition_in(node7.$$.fragment, local);
     			current = true;
     		},
     		o: function outro(local) {
@@ -1833,10 +1722,6 @@ var app = (function () {
     			transition_out(node1.$$.fragment, local);
     			transition_out(node2.$$.fragment, local);
     			transition_out(node3.$$.fragment, local);
-    			transition_out(node4.$$.fragment, local);
-    			transition_out(node5.$$.fragment, local);
-    			transition_out(node6.$$.fragment, local);
-    			transition_out(node7.$$.fragment, local);
     			current = false;
     		},
     		d: function destroy(detaching) {
@@ -1847,14 +1732,6 @@ var app = (function () {
     			destroy_component(node2, detaching);
     			if (detaching) detach_dev(t2);
     			destroy_component(node3, detaching);
-    			if (detaching) detach_dev(t3);
-    			destroy_component(node4, detaching);
-    			if (detaching) detach_dev(t4);
-    			destroy_component(node5, detaching);
-    			if (detaching) detach_dev(t5);
-    			destroy_component(node6, detaching);
-    			if (detaching) detach_dev(t6);
-    			destroy_component(node7, detaching);
     		}
     	};
 
@@ -1862,241 +1739,21 @@ var app = (function () {
     		block,
     		id: create_default_slot_3.name,
     		type: "slot",
-    		source: "(30:2) <Col>",
+    		source: "(37:4) <Col>",
     		ctx
     	});
 
     	return block;
     }
 
-    // (44:2) <Col>
+    // (43:4) <Col>
     function create_default_slot_2(ctx) {
-    	let t0;
-    	let t1;
-    	let t2;
-    	let t3;
-    	let t4;
-    	let t5;
-    	let t6;
-    	let t7;
-    	let t8;
-    	let current;
-
-    	const node0 = new Node({
-    			props: {
-    				name: "Greater Toronto",
-    				to: "Ontario",
-    				value: "6",
-    				color: "sky"
-    			},
-    			$$inline: true
-    		});
-
-    	const node1 = new Node({
-    			props: {
-    				name: "Hamilton",
-    				to: "Ontario",
-    				value: "0.53",
-    				color: "mud"
-    			},
-    			$$inline: true
-    		});
-
-    	const node2 = new Node({
-    			props: {
-    				name: "Kitchener",
-    				to: "Ontario",
-    				value: "0.2",
-    				color: "mud"
-    			},
-    			$$inline: true
-    		});
-
-    	const node3 = new Node({
-    			props: {
-    				name: "London",
-    				to: "Ontario",
-    				value: "0.366",
-    				color: "mud"
-    			},
-    			$$inline: true
-    		});
-
-    	const node4 = new Node({
-    			props: {
-    				name: "Oshawa",
-    				to: "Ontario",
-    				value: "0.159",
-    				color: "mud"
-    			},
-    			$$inline: true
-    		});
-
-    	const node5 = new Node({
-    			props: {
-    				name: "St. Catharines",
-    				to: "Ontario",
-    				value: "0.13",
-    				color: "mud"
-    			},
-    			$$inline: true
-    		});
-
-    	const node6 = new Node({
-    			props: {
-    				name: "Sudbury",
-    				to: "Ontario",
-    				value: "0.161",
-    				color: "mud"
-    			},
-    			$$inline: true
-    		});
-
-    	const node7 = new Node({
-    			props: {
-    				name: "Barrie",
-    				to: "Ontario",
-    				value: "0.14",
-    				color: "mud"
-    			},
-    			$$inline: true
-    		});
-
-    	const node8 = new Node({
-    			props: {
-    				name: "Ottawa",
-    				to: "Ontario",
-    				value: "0.9",
-    				color: "red"
-    			},
-    			$$inline: true
-    		});
-
-    	const node9 = new Node({
-    			props: {
-    				name: "Windsor",
-    				to: "Ontario",
-    				value: "0.21",
-    				color: "mud"
-    			},
-    			$$inline: true
-    		});
-
-    	const block = {
-    		c: function create() {
-    			create_component(node0.$$.fragment);
-    			t0 = space();
-    			create_component(node1.$$.fragment);
-    			t1 = space();
-    			create_component(node2.$$.fragment);
-    			t2 = space();
-    			create_component(node3.$$.fragment);
-    			t3 = space();
-    			create_component(node4.$$.fragment);
-    			t4 = space();
-    			create_component(node5.$$.fragment);
-    			t5 = space();
-    			create_component(node6.$$.fragment);
-    			t6 = space();
-    			create_component(node7.$$.fragment);
-    			t7 = space();
-    			create_component(node8.$$.fragment);
-    			t8 = space();
-    			create_component(node9.$$.fragment);
-    		},
-    		m: function mount(target, anchor) {
-    			mount_component(node0, target, anchor);
-    			insert_dev(target, t0, anchor);
-    			mount_component(node1, target, anchor);
-    			insert_dev(target, t1, anchor);
-    			mount_component(node2, target, anchor);
-    			insert_dev(target, t2, anchor);
-    			mount_component(node3, target, anchor);
-    			insert_dev(target, t3, anchor);
-    			mount_component(node4, target, anchor);
-    			insert_dev(target, t4, anchor);
-    			mount_component(node5, target, anchor);
-    			insert_dev(target, t5, anchor);
-    			mount_component(node6, target, anchor);
-    			insert_dev(target, t6, anchor);
-    			mount_component(node7, target, anchor);
-    			insert_dev(target, t7, anchor);
-    			mount_component(node8, target, anchor);
-    			insert_dev(target, t8, anchor);
-    			mount_component(node9, target, anchor);
-    			current = true;
-    		},
-    		p: noop,
-    		i: function intro(local) {
-    			if (current) return;
-    			transition_in(node0.$$.fragment, local);
-    			transition_in(node1.$$.fragment, local);
-    			transition_in(node2.$$.fragment, local);
-    			transition_in(node3.$$.fragment, local);
-    			transition_in(node4.$$.fragment, local);
-    			transition_in(node5.$$.fragment, local);
-    			transition_in(node6.$$.fragment, local);
-    			transition_in(node7.$$.fragment, local);
-    			transition_in(node8.$$.fragment, local);
-    			transition_in(node9.$$.fragment, local);
-    			current = true;
-    		},
-    		o: function outro(local) {
-    			transition_out(node0.$$.fragment, local);
-    			transition_out(node1.$$.fragment, local);
-    			transition_out(node2.$$.fragment, local);
-    			transition_out(node3.$$.fragment, local);
-    			transition_out(node4.$$.fragment, local);
-    			transition_out(node5.$$.fragment, local);
-    			transition_out(node6.$$.fragment, local);
-    			transition_out(node7.$$.fragment, local);
-    			transition_out(node8.$$.fragment, local);
-    			transition_out(node9.$$.fragment, local);
-    			current = false;
-    		},
-    		d: function destroy(detaching) {
-    			destroy_component(node0, detaching);
-    			if (detaching) detach_dev(t0);
-    			destroy_component(node1, detaching);
-    			if (detaching) detach_dev(t1);
-    			destroy_component(node2, detaching);
-    			if (detaching) detach_dev(t2);
-    			destroy_component(node3, detaching);
-    			if (detaching) detach_dev(t3);
-    			destroy_component(node4, detaching);
-    			if (detaching) detach_dev(t4);
-    			destroy_component(node5, detaching);
-    			if (detaching) detach_dev(t5);
-    			destroy_component(node6, detaching);
-    			if (detaching) detach_dev(t6);
-    			destroy_component(node7, detaching);
-    			if (detaching) detach_dev(t7);
-    			destroy_component(node8, detaching);
-    			if (detaching) detach_dev(t8);
-    			destroy_component(node9, detaching);
-    		}
-    	};
-
-    	dispatch_dev("SvelteRegisterBlock", {
-    		block,
-    		id: create_default_slot_2.name,
-    		type: "slot",
-    		source: "(44:2) <Col>",
-    		ctx
-    	});
-
-    	return block;
-    }
-
-    // (56:2) <Col>
-    function create_default_slot_1(ctx) {
     	let current;
 
     	const node = new Node({
     			props: {
-    				name: "Ontario",
-    				to: "Canada",
-    				value: "14",
+    				name: "Toronto",
+    				value: "11700",
     				color: "blue"
     			},
     			$$inline: true
@@ -2127,31 +1784,108 @@ var app = (function () {
 
     	dispatch_dev("SvelteRegisterBlock", {
     		block,
-    		id: create_default_slot_1.name,
+    		id: create_default_slot_2.name,
     		type: "slot",
-    		source: "(56:2) <Col>",
+    		source: "(43:4) <Col>",
     		ctx
     	});
 
     	return block;
     }
 
-    // (18:0) <Sankey height="1200" {fmt}>
-    function create_default_slot(ctx) {
+    // (46:4) <Col>
+    function create_default_slot_1(ctx) {
     	let t0;
     	let t1;
-    	let t2;
     	let current;
 
-    	const col0 = new Col({
+    	const node0 = new Node({
     			props: {
-    				$$slots: { default: [create_default_slot_4] },
-    				$$scope: { ctx }
+    				name: "Police",
+    				from: "Toronto",
+    				value: "1130",
+    				color: "sea"
     			},
     			$$inline: true
     		});
 
-    	const col1 = new Col({
+    	const node1 = new Node({
+    			props: {
+    				name: "TTC",
+    				from: "Toronto",
+    				value: "1975",
+    				color: "#6E9588"
+    			},
+    			$$inline: true
+    		});
+
+    	const node2 = new Node({
+    			props: {
+    				name: "Fire",
+    				from: "Toronto",
+    				value: "479",
+    				color: "red"
+    			},
+    			$$inline: true
+    		});
+
+    	const block = {
+    		c: function create() {
+    			create_component(node0.$$.fragment);
+    			t0 = space();
+    			create_component(node1.$$.fragment);
+    			t1 = space();
+    			create_component(node2.$$.fragment);
+    		},
+    		m: function mount(target, anchor) {
+    			mount_component(node0, target, anchor);
+    			insert_dev(target, t0, anchor);
+    			mount_component(node1, target, anchor);
+    			insert_dev(target, t1, anchor);
+    			mount_component(node2, target, anchor);
+    			current = true;
+    		},
+    		p: noop,
+    		i: function intro(local) {
+    			if (current) return;
+    			transition_in(node0.$$.fragment, local);
+    			transition_in(node1.$$.fragment, local);
+    			transition_in(node2.$$.fragment, local);
+    			current = true;
+    		},
+    		o: function outro(local) {
+    			transition_out(node0.$$.fragment, local);
+    			transition_out(node1.$$.fragment, local);
+    			transition_out(node2.$$.fragment, local);
+    			current = false;
+    		},
+    		d: function destroy(detaching) {
+    			destroy_component(node0, detaching);
+    			if (detaching) detach_dev(t0);
+    			destroy_component(node1, detaching);
+    			if (detaching) detach_dev(t1);
+    			destroy_component(node2, detaching);
+    		}
+    	};
+
+    	dispatch_dev("SvelteRegisterBlock", {
+    		block,
+    		id: create_default_slot_1.name,
+    		type: "slot",
+    		source: "(46:4) <Col>",
+    		ctx
+    	});
+
+    	return block;
+    }
+
+    // (36:2) <Sankey height="800" {fmt}>
+    function create_default_slot(ctx) {
+    	let t0;
+    	let t1;
+    	let current;
+
+    	const col0 = new Col({
     			props: {
     				$$slots: { default: [create_default_slot_3] },
     				$$scope: { ctx }
@@ -2159,7 +1893,7 @@ var app = (function () {
     			$$inline: true
     		});
 
-    	const col2 = new Col({
+    	const col1 = new Col({
     			props: {
     				$$slots: { default: [create_default_slot_2] },
     				$$scope: { ctx }
@@ -2167,7 +1901,7 @@ var app = (function () {
     			$$inline: true
     		});
 
-    	const col3 = new Col({
+    	const col2 = new Col({
     			props: {
     				$$slots: { default: [create_default_slot_1] },
     				$$scope: { ctx }
@@ -2182,8 +1916,6 @@ var app = (function () {
     			create_component(col1.$$.fragment);
     			t1 = space();
     			create_component(col2.$$.fragment);
-    			t2 = space();
-    			create_component(col3.$$.fragment);
     		},
     		m: function mount(target, anchor) {
     			mount_component(col0, target, anchor);
@@ -2191,8 +1923,6 @@ var app = (function () {
     			mount_component(col1, target, anchor);
     			insert_dev(target, t1, anchor);
     			mount_component(col2, target, anchor);
-    			insert_dev(target, t2, anchor);
-    			mount_component(col3, target, anchor);
     			current = true;
     		},
     		p: function update(ctx, dirty) {
@@ -2217,27 +1947,18 @@ var app = (function () {
     			}
 
     			col2.$set(col2_changes);
-    			const col3_changes = {};
-
-    			if (dirty & /*$$scope*/ 2) {
-    				col3_changes.$$scope = { dirty, ctx };
-    			}
-
-    			col3.$set(col3_changes);
     		},
     		i: function intro(local) {
     			if (current) return;
     			transition_in(col0.$$.fragment, local);
     			transition_in(col1.$$.fragment, local);
     			transition_in(col2.$$.fragment, local);
-    			transition_in(col3.$$.fragment, local);
     			current = true;
     		},
     		o: function outro(local) {
     			transition_out(col0.$$.fragment, local);
     			transition_out(col1.$$.fragment, local);
     			transition_out(col2.$$.fragment, local);
-    			transition_out(col3.$$.fragment, local);
     			current = false;
     		},
     		d: function destroy(detaching) {
@@ -2246,8 +1967,6 @@ var app = (function () {
     			destroy_component(col1, detaching);
     			if (detaching) detach_dev(t1);
     			destroy_component(col2, detaching);
-    			if (detaching) detach_dev(t2);
-    			destroy_component(col3, detaching);
     		}
     	};
 
@@ -2255,7 +1974,7 @@ var app = (function () {
     		block,
     		id: create_default_slot.name,
     		type: "slot",
-    		source: "(18:0) <Sankey height=\\\"1200\\\" {fmt}>",
+    		source: "(36:2) <Sankey height=\\\"800\\\" {fmt}>",
     		ctx
     	});
 
@@ -2263,11 +1982,18 @@ var app = (function () {
     }
 
     function create_fragment$3(ctx) {
+    	let div1;
+    	let div0;
+    	let b;
+    	let t1;
+    	let br;
+    	let t2;
+    	let t3;
     	let current;
 
     	const sankey = new Sankey({
     			props: {
-    				height: "1200",
+    				height: "800",
     				fmt: /*fmt*/ ctx[0],
     				$$slots: { default: [create_default_slot] },
     				$$scope: { ctx }
@@ -2277,13 +2003,33 @@ var app = (function () {
 
     	const block = {
     		c: function create() {
+    			div1 = element("div");
+    			div0 = element("div");
+    			b = element("b");
+    			b.textContent = "Toronto City Budget";
+    			t1 = space();
+    			br = element("br");
+    			t2 = text("\n    in 2019");
+    			t3 = space();
     			create_component(sankey.$$.fragment);
+    			add_location(b, file$2, 30, 4, 629);
+    			add_location(br, file$2, 31, 4, 660);
+    			attr_dev(div0, "class", "m3 svelte-1o2k1lr");
+    			add_location(div0, file$2, 29, 2, 608);
+    			add_location(div1, file$2, 28, 0, 600);
     		},
     		l: function claim(nodes) {
     			throw new Error("options.hydrate only works if the component was compiled with the `hydratable: true` option");
     		},
     		m: function mount(target, anchor) {
-    			mount_component(sankey, target, anchor);
+    			insert_dev(target, div1, anchor);
+    			append_dev(div1, div0);
+    			append_dev(div0, b);
+    			append_dev(div0, t1);
+    			append_dev(div0, br);
+    			append_dev(div0, t2);
+    			append_dev(div1, t3);
+    			mount_component(sankey, div1, null);
     			current = true;
     		},
     		p: function update(ctx, [dirty]) {
@@ -2305,7 +2051,8 @@ var app = (function () {
     			current = false;
     		},
     		d: function destroy(detaching) {
-    			destroy_component(sankey, detaching);
+    			if (detaching) detach_dev(div1);
+    			destroy_component(sankey);
     		}
     	};
 
@@ -2323,6 +2070,12 @@ var app = (function () {
     function instance$3($$self, $$props, $$invalidate) {
     	let fmt = num => {
     		num = Number(num) * 1000000;
+
+    		if (num >= 1000000000) {
+    			num = Math.round(num / 100000000) * 100000000;
+    			num = Math.round(num);
+    			return String(num / 1000000000) + "b";
+    		}
 
     		if (num >= 1000000) {
     			num = Math.round(num / 100000) * 100000;
@@ -2362,6 +2115,7 @@ var app = (function () {
     class Demo extends SvelteComponentDev {
     	constructor(options) {
     		super(options);
+    		if (!document.getElementById("svelte-1o2k1lr-style")) add_css$1();
     		init(this, options, instance$3, create_fragment$3, safe_not_equal, {});
 
     		dispatch_dev("SvelteRegisterComponent", {

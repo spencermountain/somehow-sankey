@@ -2,6 +2,7 @@
   import { getContext } from 'svelte'
   import { items, colCount } from './lib/store.js'
   export let value = null
+  export let from = null
   export let name = ''
   export let to = ''
   export let color = 'steelblue'
@@ -16,6 +17,7 @@
     name: name,
     to: to,
     value: Number(value),
+    from: from,
     dy: Number(dy),
     dx: Number(dx),
     color: color,
