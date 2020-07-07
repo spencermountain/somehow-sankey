@@ -62,7 +62,7 @@
   .tiny {
     z-index: 2;
     flex-direction: row;
-    font-size: 12px !important;
+    font-size: 11px !important;
     justify-content: space-evenly;
   }
   .drop {
@@ -96,11 +96,14 @@
         <div
           class="drop"
           style="width:100%; height:{d.full}%; background-color:{colors[d.color] || d.color || color};" />
-        <div
-          class="dots"
-          style="background-color: {colors[d.color] || d.color || color};">
-          <Dots color={'white'} />
-        </div>
+
+        {#if d.full !== 100}
+          <div
+            class="dots"
+            style="background-color: {colors[d.color] || d.color || color};">
+            <Dots color={'white'} />
+          </div>
+        {/if}
         <div class="label">{d.name}</div>
         <div
           class="value"
