@@ -1,4 +1,5 @@
 const linear = require('../lib/scale')
+const topRoom = 20
 
 const getMax = function (byCol) {
   let max = 0
@@ -23,6 +24,14 @@ const applyDx = function (node) {
   return node
 }
 
+const shrinkLongNodes = function (byCol) {
+  byCol.forEach((nodes) => {
+    if (nodes.length === 1) {
+      nodes[0].y += topRoom
+    }
+  })
+}
+
 const makePoints = function (byCol, width, height, nodeWidth) {
   let max = getMax(byCol)
   let yScale = linear({ minmax: [0, max], world: [0, height] })
@@ -36,6 +45,8 @@ const makePoints = function (byCol, width, height, nodeWidth) {
       node = applyDx(node)
     })
   })
+  // give cols with many margins more space
+  shrinkLongNodes(byCol)
   return byCol
 }
 module.exports = makePoints

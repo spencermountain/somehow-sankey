@@ -49,7 +49,7 @@ const getMax = function (byCol) {
 // splay-out stacked nodes a bit
 const addMargin = function (byCol) {
   let max = getMax(byCol)
-  let margin = max * 0.01
+  let margin = max * 0.015
   byCol.forEach((nodes) => {
     let count = 1
     nodes.forEach((node) => {

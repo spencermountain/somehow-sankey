@@ -15,7 +15,7 @@ const makePath = function (from, to) {
   // dest-bottom
   path += ` L${to.x},${to.y + to.height}`
   // source-bottom
-  path += ` L${from.x + from.width},${to.height + already}`
+  path += ` L${from.x + from.width},${from.y + to.height + already}`
   path += ` Z`
   return path
 }
@@ -36,7 +36,6 @@ const backwardPaths = function (nodes) {
 
 const makePaths = function (nodes) {
   let paths = []
-  console.log(nodes[4])
   nodes.forEach((node) => {
     let fromX = node.x + node.width
     let fromY = node.y

@@ -1,5 +1,6 @@
 <script>
   import layout from './layout'
+  import Dots from './Dots.svelte'
   import { items } from './lib/store.js'
   import { onMount } from 'svelte'
   import c from 'spencer-color'
@@ -46,17 +47,40 @@
   }
   .link {
     opacity: 0.2;
+    z-index: 1;
   }
   .link:hover {
     stroke-opacity: 1;
   }
   .value {
     font-size: 25px;
+    z-index: 2;
+  }
+  .label {
+    z-index: 2;
   }
   .tiny {
+    z-index: 2;
     flex-direction: row;
     font-size: 12px !important;
     justify-content: space-evenly;
+  }
+  .drop {
+    position: absolute;
+    top: 0px;
+    z-index: 1;
+  }
+  .dots {
+    position: absolute;
+    top: 0px;
+    height: 100%;
+    width: 100%;
+    z-index: 0;
+  }
+  .append {
+    position: absolute;
+    bottom: -30px;
+    font-size: 12px;
   }
 </style>
 
@@ -66,9 +90,17 @@
       <div
         class="node"
         class:tiny={d.height < 80}
-        style="left:{d.x}px; top:{d.y}px; width:{d.width}px; background-color:{colors[d.color] || color};
-        height:{d.height}px; border-bottom: 4px solid {colors[d.accent] || accent};
+        style="left:{d.x}px; top:{d.y}px; width:{d.width}px; height:{d.height}px;
+        border-bottom: 4px solid {colors[d.accent] || d.accent || accent};
         opacity:{d.opacity || 1};">
+        <div
+          class="drop"
+          style="width:100%; height:{d.full}%; background-color:{colors[d.color] || d.color || color};" />
+        <div
+          class="dots"
+          style="background-color: {colors[d.color] || d.color || color};">
+          <Dots color={'white'} />
+        </div>
         <div class="label">{d.name}</div>
         <div
           class="value"
@@ -76,6 +108,13 @@
           style="color:{colors[d.accent] || accent};">
           {fmt(d.value)}
         </div>
+        {#if d.append}
+          <div
+            class="append"
+            style="color:{colors[d.color] || d.color || color}">
+            {d.append}
+          </div>
+        {/if}
       </div>
     {/each}
 

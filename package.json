@@ -1,6 +1,6 @@
 {
   "name": "somehow-sankey",
-  "version": "1.1.0",
+  "version": "1.2.0",
   "description": "generate sankey diagrams in svelte",
   "main": "src/index.mjs",
   "scripts": {

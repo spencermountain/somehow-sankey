@@ -4,8 +4,10 @@
   export let value = null
   export let from = null
   export let name = ''
+  export let full = '100'
   export let to = ''
   export let color = 'steelblue'
+  export let append = ''
   export let accent = '#d98b89'
   export let dy = '0'
   export let dx = '0'
@@ -17,10 +19,12 @@
     name: name,
     to: to,
     value: Number(value),
+    full: Number(full),
     from: from,
     dy: Number(dy),
     dx: Number(dx),
     color: color,
+    append: append,
     accent: accent,
     opacity: opacity,
     col: $colCount,
