@@ -40,7 +40,7 @@ const makePoints = function (byCol, width, height, nodeWidth) {
     nodes.forEach((node) => {
       node.y = yScale(node.top)
       node.height = yScale(node.value)
-      node.x = xScale(node.col)
+      node.x = xScale(node.col - 1)
       node.width = nodeWidth
       node = applyDx(node)
     })

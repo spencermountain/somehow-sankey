@@ -28,9 +28,11 @@
 
 <div>
   <div class="m3">
-    <b>Toronto City Budget</b>
+    <a href="https://github.com/spencermountain/somehow-sankey">
+      Somehow-sankey
+    </a>
     <br />
-    in 2020
+    by spencermountain
   </div>
 
   <Sankey height="800" {fmt}>
@@ -44,40 +46,10 @@
       <Node name="Investment" to="Toronto" value="300" color="sea" />
       <Node name="Reserves" to="Toronto" value="500" color="sea" />
       <Node name="Transfers" to="Toronto" value="300" color="sea" />
-
     </Col>
     <Col>
       <Node name="Toronto" value="11600" color="blue" full="87.2" />
     </Col>
-    <Col>
-      <Node
-        name="Social Programs"
-        from="Toronto"
-        value="3300"
-        color="#6E9588" />
-      <Node name="TTC" from="Toronto" value="2100" color="red" />
-      <Node name="Ems" from="Toronto" value="2000" color="#CDADD9" />
-      <Node name="Financing" from="Toronto" value="1000" color="sea" />
-      <Node name="Operations" from="Toronto" value="900" color="sea" />
-      <Node name="Services" from="Toronto" value="700" color="sea" />
-      <Node name="Accounts" from="Toronto" value="700" color="sea" />
-      <Node name="Transportation" from="Toronto" value="400" color="sea" />
-      <Node name="Other" from="Toronto" value="400" color="sea" />
-
-      <!-- 
-
-      <Node name="Police" from="Toronto" value="1130" color="sea" />
-      <Node
-        name="TTC"
-        from="Toronto"
-        value="2100"
-        color="#6E9588"
-        accent="lightsteelblue" />
-      <Node name="Fire" from="Toronto" value="479" color="red" />
-      <Node name="Social Programs" from="Toronto" value="3300" color="red" />
-      <Node name="Services" from="Toronto" value="1940" color="red" /> -->
-    </Col>
-
   </Sankey>
 
 </div>
