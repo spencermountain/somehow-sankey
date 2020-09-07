@@ -27,7 +27,8 @@
     "singleQuote": true
   },
   "dependencies": {
-    "d3": "6.1.1"
+    "d3": "6.1.1",
+    "spencer-color": "^0.1.0"
   },
   "devDependencies": {
     "@rollup/plugin-commonjs": "15.0.0",

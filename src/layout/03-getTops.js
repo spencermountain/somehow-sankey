@@ -72,4 +72,4 @@ const findStart = function (byCol) {
   byCol = byNeighbour(byCol)
   return byCol
 }
-module.exports = findStart
+export default findStart

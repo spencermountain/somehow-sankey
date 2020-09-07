@@ -1,4 +1,4 @@
-const linear = require('../lib/scale')
+import linear from '../lib/scale'
 const topRoom = 20
 
 const getMax = function (byCol) {
@@ -49,4 +49,4 @@ const makePoints = function (byCol, width, height, nodeWidth) {
   shrinkLongNodes(byCol)
   return byCol
 }
-module.exports = makePoints
+export default makePoints

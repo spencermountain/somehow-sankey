@@ -61,4 +61,4 @@ const makePaths = function (nodes) {
   paths = paths.concat(backward)
   return paths
 }
-module.exports = makePaths
+export default makePaths

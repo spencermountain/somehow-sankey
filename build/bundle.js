@@ -1,11 +1,7 @@
 
 (function(l, r) { if (l.getElementById('livereloadscript')) return; r = l.createElement('script'); r.async = 1; r.src = '//' + (window.location.host || 'localhost').split(':')[0] + ':35729/livereload.js?snipver=1'; r.id = 'livereloadscript'; l.getElementsByTagName('head')[0].appendChild(r) })(window.document);
-var app = (function (c) {
+var app = (function () {
     'use strict';
-
-    function _interopDefaultLegacy (e) { return e && typeof e === 'object' && 'default' in e ? e : { 'default': e }; }
-
-    var c__default = /*#__PURE__*/_interopDefaultLegacy(c);
 
     function noop() { }
     function assign(tar, src) {
@@ -597,7 +593,6 @@ var app = (function (c) {
       byCol = byNeighbour(byCol);
       return byCol
     };
-    var _03GetTops = findStart;
 
     //a very-tiny version of d3-scale's scaleLinear
     const scaleLinear = function (obj) {
@@ -618,11 +613,6 @@ var app = (function (c) {
     //   minmax: [0, 100]
     // })
     // console.log(scale(50))
-
-    var scale = /*#__PURE__*/Object.freeze({
-        __proto__: null,
-        'default': scaleLinear
-    });
 
     const topRoom = 20;
 
@@ -659,8 +649,8 @@ var app = (function (c) {
 
     const makePoints = function (byCol, width, height, nodeWidth) {
       let max = getMax$1(byCol);
-      let yScale = scale({ minmax: [0, max], world: [0, height] });
-      let xScale = scale({ minmax: [0, byCol.length], world: [0, width] });
+      let yScale = scaleLinear({ minmax: [0, max], world: [0, height] });
+      let xScale = scaleLinear({ minmax: [0, byCol.length], world: [0, width] });
       byCol.forEach((nodes) => {
         nodes.forEach((node) => {
           node.y = yScale(node.top);
@@ -674,7 +664,6 @@ var app = (function (c) {
       shrinkLongNodes(byCol);
       return byCol
     };
-    var _04MakePoints = makePoints;
 
     const pinchDown = function (from, to) {
       return ` L${to[0]},${to[1]}`
@@ -739,7 +728,6 @@ var app = (function (c) {
       paths = paths.concat(backward);
       return paths
     };
-    var _05MakePaths = makePaths;
 
     let toFlat = function (byCol) {
       let list = [];
@@ -758,12 +746,12 @@ var app = (function (c) {
       // add value
       byCol = getValues(byCol);
       // add top
-      byCol = _03GetTops(byCol);
+      byCol = findStart(byCol);
       // add x, y, width, height
-      byCol = _04MakePoints(byCol, width, height, nodeWidth);
+      byCol = makePoints(byCol, width, height, nodeWidth);
 
       let nodes = toFlat(byCol);
-      let paths = _05MakePaths(nodes);
+      let paths = makePaths(nodes);
 
       return {
         nodes: nodes,
@@ -962,6 +950,24 @@ var app = (function (c) {
 
     const items = writable([]);
     let colCount = writable(0);
+
+    function createCommonjsModule(fn, basedir, module) {
+    	return module = {
+    	  path: basedir,
+    	  exports: {},
+    	  require: function (path, base) {
+          return commonjsRequire(path, (base === undefined || base === null) ? module.path : base);
+        }
+    	}, fn(module, module.exports), module.exports;
+    }
+
+    function commonjsRequire () {
+    	throw new Error('Dynamic requires are not currently supported by @rollup/plugin-commonjs');
+    }
+
+    var spencerColor = createCommonjsModule(function (module, exports) {
+    !function(e){module.exports=e();}(function(){return function u(i,a,c){function f(r,e){if(!a[r]){if(!i[r]){var o="function"==typeof commonjsRequire&&commonjsRequire;if(!e&&o)return o(r,!0);if(d)return d(r,!0);var n=new Error("Cannot find module '"+r+"'");throw n.code="MODULE_NOT_FOUND",n}var t=a[r]={exports:{}};i[r][0].call(t.exports,function(e){return f(i[r][1][e]||e)},t,t.exports,u,i,a,c);}return a[r].exports}for(var d="function"==typeof commonjsRequire&&commonjsRequire,e=0;e<c.length;e++)f(c[e]);return f}({1:[function(e,r,o){r.exports={blue:"#6699cc",green:"#6accb2",yellow:"#e1e6b3",red:"#cc7066",pink:"#F2C0BB",brown:"#705E5C",orange:"#cc8a66",purple:"#d8b3e6",navy:"#335799",olive:"#7f9c6c",fuscia:"#735873",beige:"#e6d7b3",slate:"#8C8C88",suede:"#9c896c",burnt:"#603a39",sea:"#50617A",sky:"#2D85A8",night:"#303b50",rouge:"#914045",grey:"#838B91",mud:"#C4ABAB",royal:"#275291",cherry:"#cc6966",tulip:"#e6b3bc",rose:"#D68881",fire:"#AB5850",greyblue:"#72697D",greygreen:"#8BA3A2",greypurple:"#978BA3",burn:"#6D5685",slategrey:"#bfb0b3",light:"#a3a5a5",lighter:"#d7d5d2",fudge:"#4d4d4d",lightgrey:"#949a9e",white:"#fbfbfb",dimgrey:"#606c74",softblack:"#463D4F",dark:"#443d3d",black:"#333333"};},{}],2:[function(e,r,o){var n=e("./colors"),t={juno:["blue","mud","navy","slate","pink","burn"],barrow:["rouge","red","orange","burnt","brown","greygreen"],roma:["#8a849a","#b5b0bf","rose","lighter","greygreen","mud"],palmer:["red","navy","olive","pink","suede","sky"],mark:["#848f9a","#9aa4ac","slate","#b0b8bf","mud","grey"],salmon:["sky","sea","fuscia","slate","mud","fudge"],dupont:["green","brown","orange","red","olive","blue"],bloor:["night","navy","beige","rouge","mud","grey"],yukon:["mud","slate","brown","sky","beige","red"],david:["blue","green","yellow","red","pink","light"],neste:["mud","cherry","royal","rouge","greygreen","greypurple"],ken:["red","sky","#c67a53","greygreen","#dfb59f","mud"]};Object.keys(t).forEach(function(e){t[e]=t[e].map(function(e){return n[e]||e});}),r.exports=t;},{"./colors":1}],3:[function(e,r,o){var n=e("./colors"),t=e("./combos"),u={colors:n,list:Object.keys(n).map(function(e){return n[e]}),combos:t};r.exports=u;},{"./colors":1,"./combos":2}]},{},[3])(3)});
+    });
 
     /* src/Sankey.svelte generated by Svelte v3.24.1 */
     const file$1 = "src/Sankey.svelte";
@@ -1505,7 +1511,7 @@ var app = (function (c) {
     	let $items;
     	validate_store(items, "items");
     	component_subscribe($$self, items, $$value => $$invalidate(11, $items = $$value));
-    	let colors = c__default['default'].colors;
+    	let colors = spencerColor.colors;
     	let { width = 800 } = $$props;
     	let { height = 500 } = $$props;
     	let { nodeWidth = 120 } = $$props;
@@ -1557,7 +1563,7 @@ var app = (function (c) {
     		Dots,
     		items,
     		onMount,
-    		c: c__default['default'],
+    		c: spencerColor,
     		colors,
     		width,
     		height,
@@ -2034,16 +2040,6 @@ var app = (function (c) {
     	let node2;
     	let t2;
     	let node3;
-    	let t3;
-    	let node4;
-    	let t4;
-    	let node5;
-    	let t5;
-    	let node6;
-    	let t6;
-    	let node7;
-    	let t7;
-    	let node8;
     	let current;
 
     	node0 = new Node({
@@ -2086,56 +2082,6 @@ var app = (function (c) {
     			$$inline: true
     		});
 
-    	node4 = new Node({
-    			props: {
-    				name: "Land-transfer",
-    				to: "Toronto",
-    				value: "800",
-    				color: "sky"
-    			},
-    			$$inline: true
-    		});
-
-    	node5 = new Node({
-    			props: {
-    				name: "Misc",
-    				to: "Toronto",
-    				value: "600",
-    				color: "sea"
-    			},
-    			$$inline: true
-    		});
-
-    	node6 = new Node({
-    			props: {
-    				name: "Investment",
-    				to: "Toronto",
-    				value: "300",
-    				color: "sea"
-    			},
-    			$$inline: true
-    		});
-
-    	node7 = new Node({
-    			props: {
-    				name: "Reserves",
-    				to: "Toronto",
-    				value: "500",
-    				color: "sea"
-    			},
-    			$$inline: true
-    		});
-
-    	node8 = new Node({
-    			props: {
-    				name: "Transfers",
-    				to: "Toronto",
-    				value: "300",
-    				color: "sea"
-    			},
-    			$$inline: true
-    		});
-
     	const block = {
     		c: function create() {
     			create_component(node0.$$.fragment);
@@ -2145,16 +2091,6 @@ var app = (function (c) {
     			create_component(node2.$$.fragment);
     			t2 = space();
     			create_component(node3.$$.fragment);
-    			t3 = space();
-    			create_component(node4.$$.fragment);
-    			t4 = space();
-    			create_component(node5.$$.fragment);
-    			t5 = space();
-    			create_component(node6.$$.fragment);
-    			t6 = space();
-    			create_component(node7.$$.fragment);
-    			t7 = space();
-    			create_component(node8.$$.fragment);
     		},
     		m: function mount(target, anchor) {
     			mount_component(node0, target, anchor);
@@ -2164,16 +2100,6 @@ var app = (function (c) {
     			mount_component(node2, target, anchor);
     			insert_dev(target, t2, anchor);
     			mount_component(node3, target, anchor);
-    			insert_dev(target, t3, anchor);
-    			mount_component(node4, target, anchor);
-    			insert_dev(target, t4, anchor);
-    			mount_component(node5, target, anchor);
-    			insert_dev(target, t5, anchor);
-    			mount_component(node6, target, anchor);
-    			insert_dev(target, t6, anchor);
-    			mount_component(node7, target, anchor);
-    			insert_dev(target, t7, anchor);
-    			mount_component(node8, target, anchor);
     			current = true;
     		},
     		p: noop,
@@ -2183,11 +2109,6 @@ var app = (function (c) {
     			transition_in(node1.$$.fragment, local);
     			transition_in(node2.$$.fragment, local);
     			transition_in(node3.$$.fragment, local);
-    			transition_in(node4.$$.fragment, local);
-    			transition_in(node5.$$.fragment, local);
-    			transition_in(node6.$$.fragment, local);
-    			transition_in(node7.$$.fragment, local);
-    			transition_in(node8.$$.fragment, local);
     			current = true;
     		},
     		o: function outro(local) {
@@ -2195,11 +2116,6 @@ var app = (function (c) {
     			transition_out(node1.$$.fragment, local);
     			transition_out(node2.$$.fragment, local);
     			transition_out(node3.$$.fragment, local);
-    			transition_out(node4.$$.fragment, local);
-    			transition_out(node5.$$.fragment, local);
-    			transition_out(node6.$$.fragment, local);
-    			transition_out(node7.$$.fragment, local);
-    			transition_out(node8.$$.fragment, local);
     			current = false;
     		},
     		d: function destroy(detaching) {
@@ -2210,16 +2126,6 @@ var app = (function (c) {
     			destroy_component(node2, detaching);
     			if (detaching) detach_dev(t2);
     			destroy_component(node3, detaching);
-    			if (detaching) detach_dev(t3);
-    			destroy_component(node4, detaching);
-    			if (detaching) detach_dev(t4);
-    			destroy_component(node5, detaching);
-    			if (detaching) detach_dev(t5);
-    			destroy_component(node6, detaching);
-    			if (detaching) detach_dev(t6);
-    			destroy_component(node7, detaching);
-    			if (detaching) detach_dev(t7);
-    			destroy_component(node8, detaching);
     		}
     	};
 
@@ -2234,7 +2140,7 @@ var app = (function (c) {
     	return block;
     }
 
-    // (50:4) <Col>
+    // (45:4) <Col>
     function create_default_slot_1(ctx) {
     	let node;
     	let current;
@@ -2243,8 +2149,7 @@ var app = (function (c) {
     			props: {
     				name: "Toronto",
     				value: "11600",
-    				color: "blue",
-    				full: "87.2"
+    				color: "blue"
     			},
     			$$inline: true
     		});
@@ -2276,14 +2181,14 @@ var app = (function (c) {
     		block,
     		id: create_default_slot_1.name,
     		type: "slot",
-    		source: "(50:4) <Col>",
+    		source: "(45:4) <Col>",
     		ctx
     	});
 
     	return block;
     }
 
-    // (38:2) <Sankey height="800" {fmt}>
+    // (38:2) <Sankey height="600" {fmt}>
     function create_default_slot(ctx) {
     	let col0;
     	let t;
@@ -2356,7 +2261,7 @@ var app = (function (c) {
     		block,
     		id: create_default_slot.name,
     		type: "slot",
-    		source: "(38:2) <Sankey height=\\\"800\\\" {fmt}>",
+    		source: "(38:2) <Sankey height=\\\"600\\\" {fmt}>",
     		ctx
     	});
 
@@ -2376,7 +2281,7 @@ var app = (function (c) {
 
     	sankey = new Sankey({
     			props: {
-    				height: "800",
+    				height: "600",
     				fmt: /*fmt*/ ctx[0],
     				$$slots: { default: [create_default_slot] },
     				$$scope: { ctx }
@@ -2516,4 +2421,4 @@ var app = (function (c) {
 
     return app;
 
-}(c));
+}());

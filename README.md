@@ -23,18 +23,20 @@ WIP svelte sankey diagram component
 <script>
   import { Sankey, Node } from 'somehow-sankey'
 </script>
-
-<Sankey>
-  <Node name="NHL" to="Leafs" value="8" />
-  <Node name="Tickets" to="Leafs" value="50" color="pink" />
-  <Node name="In-Arena" to="Leafs" value="20" />
-  <Node name="LocalTV" to="Leafs" value="5" />
-  <Node name="Leafs" to="Player Salary" value="75" />
-  <Node name="Leafs" to="Coach" value="6" />
+<Sankey height="600">
+  <Col>
+    <Node name="Property Taxes" to="Toronto" value="4400" color="sea" />
+    <Node name="Province/Fed" to="Toronto" value="2500" color="red" />
+    <Node name="TTC Fares" to="Toronto" value="1300" color="sky" />
+    <Node name="Fees" to="Toronto" value="900" color="sky" />
+  </Col>
+  <Col>
+    <Node name="Toronto" value="11600" color="blue" />
+  </Col>
 </Sankey>
 ```
 
-![image](https://user-images.githubusercontent.com/399657/81346980-47569f80-9089-11ea-9ac7-5ca72ce25dbc.png)
+![image](https://user-images.githubusercontent.com/399657/92411176-c54cb500-f114-11ea-87ed-8e736ecb00f2.png)
 
 this library includes a custom layout alg that is inspired by d3's.
 
