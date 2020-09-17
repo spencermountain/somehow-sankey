@@ -34,13 +34,14 @@ const shrinkLongNodes = function (byCol) {
 
 const makePoints = function (byCol, width, height, nodeWidth) {
   let max = getMax(byCol)
+  let half = nodeWidth / 2
   let yScale = linear({ minmax: [0, max], world: [0, height] })
   let xScale = linear({ minmax: [0, byCol.length], world: [0, width] })
   byCol.forEach((nodes) => {
     nodes.forEach((node) => {
       node.y = yScale(node.top)
       node.height = yScale(node.value)
-      node.x = xScale(node.col - 1)
+      node.x = xScale(node.col - 1) + half
       node.width = nodeWidth
       node = applyDx(node)
     })

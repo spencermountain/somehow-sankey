@@ -24,6 +24,10 @@
   .m3 {
     margin: 3rem;
   }
+  .container {
+    border: 1px solid grey;
+    width: 500px;
+  }
 </style>
 
 <div>
@@ -35,16 +39,18 @@
     by spencermountain
   </div>
 
-  <Sankey height="600" {fmt}>
-    <Col>
-      <Node name="Property Taxes" to="Toronto" value="4400" color="sea" />
-      <Node name="Province/Fed" to="Toronto" value="2500" color="red" />
-      <Node name="TTC Fares" to="Toronto" value="1300" color="sky" />
-      <Node name="Fees" to="Toronto" value="900" color="sky" />
-    </Col>
-    <Col>
-      <Node name="Toronto" value="11600" color="blue" />
-    </Col>
-  </Sankey>
+  <div class="container">
+    <Sankey height="600" {fmt}>
+      <Col>
+        <Node name="Property Taxes" to="Toronto" value="4400" color="sea" />
+        <Node name="Province/Fed" to="Toronto" value="2500" color="red" />
+        <Node name="TTC Fares" to="Toronto" value="1300" color="sky" />
+        <Node name="Fees" to="Toronto" value="900" color="sky" />
+      </Col>
+      <Col>
+        <Node name="Toronto" value="11600" color="blue" />
+      </Col>
+    </Sankey>
+  </div>
 
 </div>

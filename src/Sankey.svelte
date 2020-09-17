@@ -5,9 +5,9 @@
   import { onMount } from 'svelte'
   import c from 'spencer-color'
   let colors = c.colors
-  export let width = 800
   export let height = 500
   export let nodeWidth = 120
+  let width = 500 //this gets re-set
   export let fmt = num => {
     if (num >= 1000000) {
       num = Math.round(num / 1000000) * 1000000
@@ -84,7 +84,7 @@
   }
 </style>
 
-<div style="position:relative;">
+<div style="position:relative;" bind:clientWidth={width}>
   <div style="position:absolute; width:{width}px; height:{height}px;">
     {#each nodes as d}
       <div
