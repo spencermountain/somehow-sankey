@@ -44,6 +44,10 @@
     border-bottom: 4px solid #d98b89;
     font-size: 15px;
     font-family: 'Catamaran', sans-serif;
+    transition: box-shadow 0.2s ease-in-out;
+  }
+  .node:hover {
+    box-shadow: 2px 2px 8px 0px steelblue;
   }
   .link {
     opacity: 0.2;
@@ -55,9 +59,11 @@
   .value {
     font-size: 25px;
     z-index: 2;
+    cursor: default;
   }
   .label {
     z-index: 2;
+    cursor: default;
   }
   .tiny {
     z-index: 2;
