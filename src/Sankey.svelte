@@ -8,7 +8,7 @@
   export let height = 500
   export let nodeWidth = 120
   let width = 500 //this gets re-set
-  export let fmt = num => {
+  export let fmt = (num) => {
     if (num >= 1000000) {
       num = Math.round(num / 1000000) * 1000000
       return String(num / 1000000) + 'm'
@@ -30,7 +30,65 @@
   })
 </script>
 
+<div style="position:relative;" bind:clientWidth={width}>
+  <div style="position:absolute; width:{width}px; height:{height}px;">
+    {#each nodes as d}
+      <div
+        class="node"
+        class:tiny={d.height < 75}
+        style="left:{d.x}px; top:{d.y}px; width:{d.width}px; height:{d.height}px;
+        border-bottom: 4px solid {colors[d.accent] || d.accent || accent};
+        opacity:{d.opacity || 1};"
+      >
+        <div
+          class="drop"
+          style="width:100%; height:{d.full}%; background-color:{d.color ||
+            color};"
+        />
+
+        {#if d.full !== 100}
+          <div class="dots" style="background-color: {d.color || color};">
+            <Dots color={'white'} />
+          </div>
+        {/if}
+        <div class="label" class:after={d.after}>{d.name}</div>
+        <div
+          class="value"
+          class:tiny={d.height < 75}
+          style="color:{colors[d.accent] || accent};"
+          class:hide={d.after}
+        >
+          {fmt(d.value)}
+        </div>
+        {#if d.append}
+          <div class="append" style="color:{d.color || color}">
+            {d.append}
+          </div>
+        {/if}
+      </div>
+    {/each}
+  </div>
+
+  <svg viewBox="0,0,{width},{height}" {width} {height}>
+    {#each paths as d}
+      <path
+        class="link"
+        {d}
+        stroke="none"
+        fill="lightsteelblue"
+        style=""
+        stroke-width={1}
+      />
+    {/each}
+  </svg>
+</div>
+
+<slot />
+
 <style>
+  .hide {
+    display: none;
+  }
   .node {
     position: absolute;
     border-radius: 3px;
@@ -64,6 +122,7 @@
   .label {
     z-index: 2;
     cursor: default;
+    line-height: 1rem;
   }
   .tiny {
     z-index: 2;
@@ -88,58 +147,12 @@
     bottom: -30px;
     font-size: 12px;
   }
+  .after {
+    display: none;
+    /* position: relative;
+    left: 150px;
+    color: grey;
+    white-space: nowrap;
+    text-align: left; */
+  }
 </style>
-
-<div style="position:relative;" bind:clientWidth={width}>
-  <div style="position:absolute; width:{width}px; height:{height}px;">
-    {#each nodes as d}
-      <div
-        class="node"
-        class:tiny={d.height < 80}
-        style="left:{d.x}px; top:{d.y}px; width:{d.width}px; height:{d.height}px;
-        border-bottom: 4px solid {colors[d.accent] || d.accent || accent};
-        opacity:{d.opacity || 1};">
-        <div
-          class="drop"
-          style="width:100%; height:{d.full}%; background-color:{colors[d.color] || d.color || color};" />
-
-        {#if d.full !== 100}
-          <div
-            class="dots"
-            style="background-color: {colors[d.color] || d.color || color};">
-            <Dots color={'white'} />
-          </div>
-        {/if}
-        <div class="label">{d.name}</div>
-        <div
-          class="value"
-          class:tiny={d.height < 80}
-          style="color:{colors[d.accent] || accent};">
-          {fmt(d.value)}
-        </div>
-        {#if d.append}
-          <div
-            class="append"
-            style="color:{colors[d.color] || d.color || color}">
-            {d.append}
-          </div>
-        {/if}
-      </div>
-    {/each}
-
-  </div>
-
-  <svg viewBox="0,0,{width},{height}" {width} {height}>
-    {#each paths as d}
-      <path
-        class="link"
-        {d}
-        stroke="none"
-        fill="lightsteelblue"
-        style=""
-        stroke-width={1} />
-    {/each}
-  </svg>
-</div>
-
-<slot />
