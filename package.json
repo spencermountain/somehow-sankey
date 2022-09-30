@@ -27,7 +27,7 @@
     "singleQuote": true
   },
   "dependencies": {
-    "d3": "6.1.1",
+    "d3": "7.6.1",
     "spencer-color": "^0.1.0"
   },
   "devDependencies": {
