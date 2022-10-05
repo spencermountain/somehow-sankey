@@ -15,6 +15,7 @@
   export let show_num = true
   export let show_percent = false
   export let show_label = true
+  export let inline = false
   export let dy = '0'
   export let dx = '0'
   export let opacity = '1'
@@ -34,10 +35,11 @@
     color: colors[color] || color,
     stroke: colors[stroke] || stroke,
     append,
+    inline,
     show_num,
     show_percent,
     show_label,
-    accent,
+    accent: colors[accent] || accent,
     opacity,
     col: $colCount,
   }

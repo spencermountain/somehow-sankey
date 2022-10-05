@@ -13,6 +13,13 @@ const getMax = function (byCol) {
   })
   return max
 }
+const getTotal = function (nodes) {
+  let total = 0
+  nodes.forEach((node) => {
+    total += node.value
+  })
+  return total
+}
 
 const applyDx = function (node) {
   if (node.dx) {
@@ -44,9 +51,11 @@ const makePoints = function (byCol, width, height, nodeWidth) {
   let yScale = linear({ minmax: [0, max], world: [0, height - topRoom] })
   let xScale = linear({ minmax: [0, byCol.length], world: [0, width] })
   byCol.forEach((nodes) => {
+    let total = getTotal(nodes)
+    console.log(total)
     nodes.forEach((node) => {
       node.y = yScale(node.top)
-      node.percent = percent(node.value, max)
+      node.percent = percent(node.value, total)
       node.height = yScale(node.value)
       node.x = xScale(node.col - 1) + half
       node.width = nodeWidth

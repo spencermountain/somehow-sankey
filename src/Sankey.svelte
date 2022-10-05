@@ -37,6 +37,8 @@
       <div
         class="node"
         class:tiny={d.height < 75}
+        class:inline={d.inline}
+        title={d.name}
         style="left:{d.x}px; top:{d.y}px; width:{d.width}px; height:{d.height}px;      
         opacity:{d.opacity || 1};"
       >
@@ -138,11 +140,13 @@
     cursor: default;
     line-height: 1rem;
   }
+  .inline {
+    flex-direction: row;
+    justify-content: space-evenly;
+  }
   .tiny {
     z-index: 2;
-    /* flex-direction: row; */
     font-size: 10px !important;
-    /* justify-content: space-evenly; */
     line-height: 11px;
   }
   .drop {
