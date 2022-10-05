@@ -11,6 +11,10 @@
   export let color = 'steelblue'
   export let append = ''
   export let accent = '#d98b89'
+  export let stroke = '#d98b89'
+  export let show_num = true
+  export let show_percent = false
+  export let show_label = true
   export let dy = '0'
   export let dx = '0'
   export let opacity = '1'
@@ -28,7 +32,11 @@
     dy: Number(dy),
     dx: Number(dx),
     color: colors[color] || color,
+    stroke: colors[stroke] || stroke,
     append,
+    show_num,
+    show_percent,
+    show_label,
     accent,
     opacity,
     col: $colCount,

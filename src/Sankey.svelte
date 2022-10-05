@@ -26,6 +26,7 @@
   let accent = '#d98b89'
   onMount(() => {
     ;({ nodes, paths } = layout($items, width, height, nodeWidth))
+    console.log(nodes)
     // console.log(paths)
   })
 </script>
@@ -36,14 +37,13 @@
       <div
         class="node"
         class:tiny={d.height < 75}
-        style="left:{d.x}px; top:{d.y}px; width:{d.width}px; height:{d.height}px;
-        border-bottom: 4px solid {colors[d.accent] || d.accent || accent};
+        style="left:{d.x}px; top:{d.y}px; width:{d.width}px; height:{d.height}px;      
         opacity:{d.opacity || 1};"
       >
         <div
           class="drop"
           style="width:100%; height:{d.full}%; background-color:{d.color ||
-            color};"
+            color}; border-bottom: 4px solid {d.accent || accent};"
         />
 
         {#if d.full !== 100}
@@ -51,15 +51,27 @@
             <Dots color={'white'} />
           </div>
         {/if}
-        <div class="label" class:after={d.after}>{d.name}</div>
-        <div
-          class="value"
-          class:tiny={d.height < 75}
-          style="color:{colors[d.accent] || accent};"
-          class:hide={d.after}
-        >
-          {fmt(d.value)}
+        <div class="label" class:after={d.after}>
+          {d.name}
         </div>
+        {#if d.show_num}
+          <div
+            class="value"
+            class:tiny={d.height < 75}
+            style="color:{d.stroke};"
+          >
+            {fmt(d.value)}
+          </div>
+        {/if}
+        {#if d.show_percent}
+          <div
+            class="value"
+            class:tiny={d.height < 75}
+            style="color:{d.stroke}; opacity:0.8;"
+          >
+            {d.percent}
+          </div>
+        {/if}
         {#if d.append}
           <div class="append" style="color:{d.color || color}">
             {d.append}
@@ -103,6 +115,7 @@
     font-size: 15px;
     font-family: 'Catamaran', sans-serif;
     transition: box-shadow 0.2s ease-in-out;
+    box-shadow: 1px 2px 8px 0px grey;
   }
   .node:hover {
     box-shadow: 2px 2px 8px 0px steelblue;
@@ -115,7 +128,8 @@
     stroke-opacity: 1;
   }
   .value {
-    font-size: 25px;
+    font-size: 20px;
+    font-weight: 100;
     z-index: 2;
     cursor: default;
   }
@@ -126,14 +140,16 @@
   }
   .tiny {
     z-index: 2;
-    flex-direction: row;
-    font-size: 11px !important;
-    justify-content: space-evenly;
+    /* flex-direction: row; */
+    font-size: 10px !important;
+    /* justify-content: space-evenly; */
+    line-height: 11px;
   }
   .drop {
     position: absolute;
     top: 0px;
     z-index: 1;
+    border-radius: 3px;
   }
   .dots {
     position: absolute;

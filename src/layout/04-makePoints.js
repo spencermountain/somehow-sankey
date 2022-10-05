@@ -32,6 +32,12 @@ const shrinkLongNodes = function (byCol) {
   })
 }
 
+const percent = (part, total) => {
+  let num = (part / total) * 100
+  num = Math.round(num)
+  return num + '%'
+}
+
 const makePoints = function (byCol, width, height, nodeWidth) {
   let max = getMax(byCol)
   let half = nodeWidth / 2
@@ -40,6 +46,7 @@ const makePoints = function (byCol, width, height, nodeWidth) {
   byCol.forEach((nodes) => {
     nodes.forEach((node) => {
       node.y = yScale(node.top)
+      node.percent = percent(node.value, max)
       node.height = yScale(node.value)
       node.x = xScale(node.col - 1) + half
       node.width = nodeWidth
