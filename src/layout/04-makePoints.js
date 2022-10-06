@@ -45,14 +45,13 @@ const percent = (part, total) => {
   return num + '%'
 }
 
-const makePoints = function (byCol, width, height, nodeWidth) {
+const makePoints = function (byCol, width, height, nodeWidth, labels) {
   let max = getMax(byCol)
   let half = nodeWidth / 2
   let yScale = linear({ minmax: [0, max], world: [0, height - topRoom] })
   let xScale = linear({ minmax: [0, byCol.length], world: [0, width] })
   byCol.forEach((nodes) => {
     let total = getTotal(nodes)
-    console.log(total)
     nodes.forEach((node) => {
       node.y = yScale(node.top)
       node.percent = percent(node.value, total)
@@ -61,6 +60,12 @@ const makePoints = function (byCol, width, height, nodeWidth) {
       node.width = nodeWidth
       node = applyDx(node)
     })
+  })
+  labels.forEach(o => {
+    o.x = xScale(o.col - 2) + nodeWidth * 1.5
+    o.start = yScale(Number(o.start))
+    o.end = yScale(Number(o.end))
+    o.width = nodeWidth
   })
   // give cols with many margins more space
   shrinkLongNodes(byCol)

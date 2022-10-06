@@ -1,7 +1,7 @@
 <script>
   import layout from './layout'
   import Dots from './Dots.svelte'
-  import { items } from './lib/store.js'
+  import { items, labels } from './lib/store.js'
   import { onMount } from 'svelte'
   import c from 'spencer-color'
   let colors = c.colors
@@ -22,12 +22,15 @@
   width = Number(width)
   let nodes = []
   let paths = []
+  let ourLabels = []
   let color = 'steelblue'
   let accent = '#d98b89'
   onMount(() => {
-    ;({ nodes, paths } = layout($items, width, height, nodeWidth))
-    console.log(nodes)
-    // console.log(paths)
+    let res = layout($items, width, height, nodeWidth, $labels)
+    console.log(res)
+    nodes = res.nodes
+    paths = res.paths
+    ourLabels = res.labels
   })
 </script>
 
@@ -81,6 +84,25 @@
         {/if}
       </div>
     {/each}
+
+    {#each ourLabels as d}
+      <div
+        class="myLabel row"
+        style="left:{d.x}px; top:{d.y}px; height:{d.end -
+          d.start}px; width:{d.width}px; height:{d.height}px;      
+    opacity:{d.opacity || 1};"
+      >
+        <div class="flip" style="position:relative;">
+          <div class="brace brace_part1" />
+          <div class="brace brace_part2" />
+          <div class="brace brace_part3" />
+          <div class="brace brace_part4" />
+        </div>
+        <div>
+          {@html d.label}
+        </div>
+      </div>
+    {/each}
   </div>
 
   <svg viewBox="0,0,{width},{height}" {width} {height}>
@@ -100,8 +122,45 @@
 <slot />
 
 <style>
-  .hide {
-    display: none;
+  .flip {
+    -webkit-transform: scaleX(-1);
+    transform: scale(-1, 3.1);
+  }
+  .brace {
+    width: 2em;
+    height: 3em;
+  }
+  .brace_part1 {
+    border-left: 2px solid lightgrey;
+    border-top-left-radius: 12px;
+    margin-left: 2em;
+  }
+  .brace_part2 {
+    border-right: 2px solid lightgrey;
+    border-bottom-right-radius: 12px;
+  }
+  .brace_part3 {
+    border-right: 2px solid lightgrey;
+    border-top-right-radius: 12px;
+  }
+  .brace_part4 {
+    border-left: 2px solid lightgrey;
+    border-bottom-left-radius: 12px;
+    margin-left: 2em;
+  }
+  .myLabel {
+    position: absolute;
+    flex-shrink: 1;
+    max-width: 60px;
+    /* max-width: 75px; */
+    /* min-width: 175px; */
+    margin-left: 25px;
+    /* border-left: 3px solid lightgrey; */
+    color: grey;
+    text-align: left;
+    padding-left: 1rem;
+    font-size: 11px;
+    line-height: 18px;
   }
   .node {
     position: absolute;
